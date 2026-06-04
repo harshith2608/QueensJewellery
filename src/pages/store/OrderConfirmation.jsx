@@ -150,6 +150,13 @@ export default function OrderConfirmation() {
                     <span>−{formatPrice(order.coupon.discount)}</span>
                   </div>
                 )}
+                <div className="flex justify-between text-jewel-muted">
+                  <span>Shipping</span>
+                  {!order.shippingFee
+                    ? <span className="text-green-600 font-medium">Free</span>
+                    : <span>{formatPrice(order.shippingFee)}</span>
+                  }
+                </div>
                 <div className="flex justify-between font-semibold text-jewel-dark text-base pt-1 border-t border-blush">
                   <span>Total Paid</span>
                   <span className="text-rose-gold">{formatPrice(order.total)}</span>

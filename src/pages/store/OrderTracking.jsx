@@ -205,6 +205,13 @@ function OrderRow({ order }) {
                   <span>−{formatPrice(order.coupon.discount)}</span>
                 </div>
               )}
+              <div className="flex justify-between text-jewel-muted text-sm">
+                <span>Shipping</span>
+                {!order.shippingFee
+                  ? <span className="text-green-600 font-medium">Free</span>
+                  : <span>{formatPrice(order.shippingFee)}</span>
+                }
+              </div>
               <div className="flex justify-between font-semibold text-jewel-dark">
                 <span>Total</span>
                 <span className="text-rose-gold">{formatPrice(order.total)}</span>
