@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ShoppingBag, Package, IndianRupee, Clock, AlertTriangle } from 'lucide-react'
-import { getAllOrders, getProducts } from '../../firebase/firestore'
+import { ShoppingBag, Package, IndianRupee, Clock, AlertTriangle, FlaskConical, Trash2 } from 'lucide-react'
+import { getAllOrders, getProducts, getTestOrders, clearTestOrders } from '../../firebase/firestore'
 import OrderStatusBadge from '../../components/admin/OrderStatusBadge'
 import { formatPrice, formatDate } from '../../utils/formatters'
+import { useTestMode } from '../../contexts/TestModeContext.jsx'
+import toast from 'react-hot-toast'
 
 function StatCard({ icon: Icon, label, value, color = 'rose' }) {
   const colorMap = {
@@ -28,13 +30,19 @@ export default function Dashboard() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [testOrders, setTestOrders] = useState([])
+  const [clearingTests, setClearingTests] = useState(false)
+  const { isTestMode, toggleTestMode } = useTestMode()
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [allOrders, allProducts] = await Promise.all([getAllOrders(), getProducts()])
+        const [allOrders, allProducts, allTestOrders] = await Promise.all([
+          getAllOrders(), getProducts(), getTestOrders(),
+        ])
         setOrders(allOrders)
         setProducts(allProducts)
+        setTestOrders(allTestOrders)
       } catch (err) {
         console.error('Dashboard load error', err)
       } finally {
@@ -43,6 +51,20 @@ export default function Dashboard() {
     }
     load()
   }, [])
+
+  const handleClearTestOrders = async () => {
+    if (!window.confirm(`Delete all ${testOrders.length} test orders? This cannot be undone.`)) return
+    setClearingTests(true)
+    try {
+      await clearTestOrders()
+      setTestOrders([])
+      toast.success('Test orders cleared')
+    } catch {
+      toast.error('Failed to clear test orders')
+    } finally {
+      setClearingTests(false)
+    }
+  }
 
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
   const pendingOrders = orders.filter((o) => o.status === 'pending').length
@@ -59,10 +81,72 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-serif text-jewel-dark">Dashboard</h1>
-        <p className="text-jewel-muted text-sm mt-0.5">Welcome back, here's what's happening today.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold font-serif text-jewel-dark">Dashboard</h1>
+          <p className="text-jewel-muted text-sm mt-0.5">Welcome back, here's what's happening today.</p>
+        </div>
+
+        {/* ── Test Mode Toggle ── */}
+        <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition-colors ${
+          isTestMode ? 'bg-amber-50 border-amber-300' : 'bg-white border-gray-100'
+        }`}>
+          <FlaskConical size={18} className={isTestMode ? 'text-amber-500' : 'text-jewel-muted'} />
+          <div>
+            <p className={`text-sm font-semibold ${isTestMode ? 'text-amber-700' : 'text-jewel-dark'}`}>
+              Test Mode
+            </p>
+            <p className="text-xs text-jewel-muted leading-tight">
+              {isTestMode ? 'Orders go to test collection' : 'Off — real orders active'}
+            </p>
+          </div>
+          <button
+            onClick={() => toggleTestMode()}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ml-2 ${
+              isTestMode ? 'bg-amber-400' : 'bg-gray-200'
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+              isTestMode ? 'translate-x-6' : 'translate-x-1'
+            }`} />
+          </button>
+        </div>
       </div>
+
+      {/* ── Test Orders Panel (shown when there are test orders) ── */}
+      {testOrders.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <FlaskConical size={16} className="text-amber-600" />
+              <h3 className="text-sm font-semibold text-amber-700">
+                Test Orders ({testOrders.length})
+              </h3>
+            </div>
+            <button
+              onClick={handleClearTestOrders}
+              disabled={clearingTests}
+              className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={12} />
+              {clearingTests ? 'Clearing…' : 'Clear All'}
+            </button>
+          </div>
+          <div className="space-y-2">
+            {testOrders.slice(0, 5).map((order) => (
+              <div key={order.id} className="flex items-center justify-between text-xs bg-white rounded-xl px-3 py-2 border border-amber-100">
+                <span className="font-mono text-amber-700">#{order.id.slice(-8).toUpperCase()}</span>
+                <span className="text-jewel-muted">{order.address?.fullName || '—'}</span>
+                <span className="font-medium text-jewel-dark">{formatPrice(order.total)}</span>
+                <OrderStatusBadge status={order.status} />
+              </div>
+            ))}
+            {testOrders.length > 5 && (
+              <p className="text-xs text-amber-600 text-center pt-1">+{testOrders.length - 5} more test orders</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={ShoppingBag} label="Total Orders" value={orders.length} color="rose" />

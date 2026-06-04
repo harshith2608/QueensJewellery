@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 
 import { useCart } from '../../contexts/CartContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { useTestMode } from '../../contexts/TestModeContext.jsx'
 import { createOrder, incrementCouponUsage, updateUser, decrementProductStock } from '../../firebase/firestore.js'
 import { formatPrice } from '../../utils/formatters.js'
 import { initiateRazorpayPayment } from '../../utils/razorpay.js'
@@ -54,6 +55,7 @@ export default function Checkout() {
   const location = useLocation()
   const { cartItems, cartTotal, clearCart } = useCart()
   const { user, userData, isAuthenticated, loading: authLoading } = useAuth()
+  const { isTestMode } = useTestMode()
 
   // Coupon passed from Cart page via location.state
   const locationState = location.state || {}
@@ -173,10 +175,11 @@ export default function Checkout() {
     return new Promise((resolve, reject) => {
       initiateRazorpayPayment({
         amount: finalTotal * 100,
-        orderId: '', // No server-side order ID in this flow
+        orderId: '',
         name: getActiveAddress().fullName,
         email: userData?.email || '',
         phone: user?.phoneNumber || getActiveAddress().phone,
+        isTestMode,
         onSuccess: async (response) => {
           try {
             const now = new Date().toISOString()
@@ -189,7 +192,7 @@ export default function Checkout() {
               statusHistory: [
                 { status: 'confirmed', note: 'Payment received via Razorpay', timestamp: now },
               ],
-            })
+            }, isTestMode)
 
             if (appliedCoupon?.id) {
               await incrementCouponUsage(appliedCoupon.id).catch(console.error)
@@ -228,7 +231,7 @@ export default function Checkout() {
       statusHistory: [
         { status: 'pending', note: 'Order placed via WhatsApp', timestamp: now },
       ],
-    })
+    }, isTestMode)
 
     if (appliedCoupon?.id) {
       await incrementCouponUsage(appliedCoupon.id).catch(console.error)
