@@ -69,7 +69,7 @@ export default function Dashboard() {
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
   const pendingOrders = orders.filter((o) => o.status === 'pending').length
   const recentOrders = orders.slice(0, 10)
-  const lowStockProducts = products.filter((p) => (p.stock ?? 0) <= 5)
+  const lowStockProducts = products.filter((p) => p.stock !== null && p.stock !== undefined && p.stock <= 5)
 
   if (loading) {
     return (
@@ -222,7 +222,7 @@ export default function Dashboard() {
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
                     p.stock === 0 ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
                   }`}>
-                    {p.stock === 0 ? 'Out' : `${p.stock} left`}
+                    {p.stock === 0 ? 'Out of stock' : `${p.stock} left`}
                   </span>
                 </li>
               ))}
