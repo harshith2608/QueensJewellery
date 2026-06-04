@@ -12,6 +12,8 @@ import Footer from '../../components/store/Footer.jsx'
 import Button from '../../components/ui/Button.jsx'
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919999999999'
+const FREE_SHIPPING_THRESHOLD = 2000
+const SHIPPING_FEE = 150
 
 export default function Cart() {
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart()
@@ -61,7 +63,9 @@ export default function Cart() {
       : Math.min(appliedCoupon.value, cartTotal)
     : 0
 
-  const finalTotal = Math.max(0, cartTotal - discountAmount - globalOfferDiscount)
+  const discountedTotal = Math.max(0, cartTotal - discountAmount - globalOfferDiscount)
+  const shippingFee = discountedTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
+  const finalTotal = discountedTotal + shippingFee
 
   const handleApplyCoupon = async () => {
     const code = couponCode.trim().toUpperCase()
@@ -116,7 +120,7 @@ export default function Cart() {
   // ─── Navigation ────────────────────────────────────────────────────────────
 
   const handleProceedToCheckout = () => {
-    navigate('/checkout', { state: { appliedCoupon, discountAmount, globalOffer: globalOfferActive ? globalOffer : null, globalOfferDiscount, finalTotal } })
+    navigate('/checkout', { state: { appliedCoupon, discountAmount, globalOffer: globalOfferActive ? globalOffer : null, globalOfferDiscount, shippingFee, finalTotal } })
   }
 
   const handleWhatsAppOrder = () => {
@@ -303,6 +307,15 @@ export default function Cart() {
                   </div>
                 )}
 
+                {/* Shipping */}
+                <div className="flex justify-between text-jewel-muted">
+                  <span>Shipping</span>
+                  {shippingFee === 0
+                    ? <span className="text-green-600 font-medium">Free</span>
+                    : <span>{formatPrice(shippingFee)}</span>
+                  }
+                </div>
+
                 <div className="border-t border-blush pt-2 flex justify-between font-semibold text-jewel-dark text-base">
                   <span>Total</span>
                   <span className="text-rose-gold">{formatPrice(finalTotal)}</span>
@@ -375,7 +388,10 @@ export default function Cart() {
 
               {/* Trust note */}
               <p className="text-center text-jewel-muted text-xs">
-                Free shipping on orders above ₹999
+                {shippingFee > 0
+                  ? `Add ${formatPrice(FREE_SHIPPING_THRESHOLD - discountedTotal)} more for free shipping`
+                  : '🎉 You qualify for free shipping!'
+                }
               </p>
             </div>
           </div>

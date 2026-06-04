@@ -63,6 +63,7 @@ export default function Checkout() {
   const discountAmount = locationState.discountAmount ?? 0
   const globalOffer = locationState.globalOffer ?? null
   const globalOfferDiscount = locationState.globalOfferDiscount ?? 0
+  const shippingFee = locationState.shippingFee ?? 0
   const finalTotal = locationState.finalTotal ?? cartTotal
 
   // Address state
@@ -149,6 +150,7 @@ export default function Checkout() {
       address,
       subtotal: cartTotal,
       discount: discountAmount + globalOfferDiscount,
+      shippingFee,
       total: finalTotal,
       coupon: appliedCoupon
         ? { code: appliedCoupon.code, id: appliedCoupon.id, discount: discountAmount }
@@ -555,6 +557,13 @@ export default function Checkout() {
                       <span>−{formatPrice(discountAmount)}</span>
                     </div>
                   )}
+                  <div className="flex justify-between text-jewel-muted">
+                    <span>Shipping</span>
+                    {shippingFee === 0
+                      ? <span className="text-green-600 font-medium">Free</span>
+                      : <span>{formatPrice(shippingFee)}</span>
+                    }
+                  </div>
                   <div className="flex justify-between font-semibold text-jewel-dark text-base pt-1 border-t border-blush">
                     <span>Total</span>
                     <span className="text-rose-gold">{formatPrice(finalTotal)}</span>
