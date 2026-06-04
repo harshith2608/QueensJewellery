@@ -1,0 +1,184 @@
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Menu, X, Search, ShoppingBag, Home, Store, Grid3X3, PackageSearch } from 'lucide-react'
+import { useCart } from '../../contexts/CartContext.jsx'
+import { useAuth } from '../../contexts/AuthContext.jsx'
+import CartDrawer from './CartDrawer.jsx'
+import AnnouncementBar from './AnnouncementBar.jsx'
+
+const BASE_navLinks = [
+  { label: 'Home', to: '/', icon: Home },
+  { label: 'Shop', to: '/shop', icon: Store },
+  { label: 'Categories', to: '/categories', icon: Grid3X3 },
+]
+
+export default function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const { cartCount } = useCart()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const navLinks = isAuthenticated
+    ? [...BASE_navLinks, { label: 'Orders', to: '/orders', icon: PackageSearch }]
+    : BASE_navLinks
+
+  // Shadow on scroll
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Close mobile menu on route change
+  const prevPath = useRef(location.pathname)
+  useEffect(() => {
+    if (prevPath.current !== location.pathname) {
+      prevPath.current = location.pathname
+      setMobileMenuOpen(false)
+    }
+  }, [location.pathname])
+
+  const isActive = (to) =>
+    to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
+
+  return (
+    <>
+      <div className="sticky top-0 z-30">
+      <AnnouncementBar />
+      <nav
+        className={`bg-ivory transition-shadow duration-200 ${
+          scrolled ? 'shadow-md' : 'shadow-sm'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: hamburger (mobile) + logo */}
+            <div className="flex items-center gap-3">
+              <button
+                className="md:hidden p-2 rounded-lg text-jewel-muted hover:text-jewel-dark hover:bg-blush transition-colors"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+
+              <Link
+                to="/"
+                className="font-serif text-2xl text-rose-gold tracking-wide hover:opacity-80 transition-opacity"
+              >
+                Queens Jewellery
+              </Link>
+            </div>
+
+            {/* Center: desktop nav */}
+            <div className="hidden md:flex items-center gap-8">
+              {navLinks.map(({ label, to }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`text-sm font-medium tracking-wide transition-colors pb-0.5 border-b-2 ${
+                    isActive(to)
+                      ? 'text-rose-gold border-rose-gold'
+                      : 'text-jewel-dark border-transparent hover:text-rose-gold hover:border-rose-gold'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right: search + cart */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => navigate('/search')}
+                className="p-2 rounded-full text-jewel-muted hover:text-jewel-dark hover:bg-blush transition-colors"
+                aria-label="Search"
+              >
+                <Search size={20} />
+              </button>
+
+              <button
+                onClick={() => setCartOpen(true)}
+                className="relative p-2 rounded-full text-jewel-muted hover:text-jewel-dark hover:bg-blush transition-colors"
+                aria-label={`Open cart, ${cartCount} items`}
+              >
+                <ShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-gold text-ivory text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile slide-down menu */}
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            mobileMenuOpen ? 'max-h-64 border-t border-blush' : 'max-h-0'
+          }`}
+        >
+          <div className="px-4 py-3 space-y-1 bg-ivory">
+            {navLinks.map(({ label, to, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  isActive(to)
+                    ? 'bg-blush text-rose-gold'
+                    : 'text-jewel-dark hover:bg-blush hover:text-rose-gold'
+                }`}
+              >
+                <Icon size={18} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile bottom category bar */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-ivory border-t border-blush shadow-[0_-2px_8px_rgba(44,26,29,0.08)]">
+          <div className="flex items-center justify-around px-2 py-1.5">
+            {navLinks.map(({ label, to, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors ${
+                  isActive(to) ? 'text-rose-gold' : 'text-jewel-muted'
+                }`}
+              >
+                <Icon size={20} />
+                <span className="text-[10px] font-medium">{label}</span>
+              </Link>
+            ))}
+            <button
+              onClick={() => setCartOpen(true)}
+              className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors relative ${
+                cartOpen ? 'text-rose-gold' : 'text-jewel-muted'
+              }`}
+              aria-label="Cart"
+            >
+              <div className="relative">
+                <ShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] bg-rose-gold text-ivory text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium">Cart</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+      </div>
+
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
+  )
+}
