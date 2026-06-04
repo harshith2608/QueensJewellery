@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 import { CartProvider } from './contexts/CartContext'
+import { TestModeProvider } from './contexts/TestModeContext'
+import TestModeBanner from './components/store/TestModeBanner'
 import Toast from './components/ui/Toast'
 import Spinner from './components/ui/Spinner'
 
@@ -127,8 +129,11 @@ export default function App() {
       <AuthProvider>
         <AdminAuthProvider>
           <CartProvider>
-            <Toast />
-            <AppRoutes />
+            <TestModeProvider>
+              <Toast />
+              <TestModeBanner />
+              <AppRoutes />
+            </TestModeProvider>
           </CartProvider>
         </AdminAuthProvider>
       </AuthProvider>

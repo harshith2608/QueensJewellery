@@ -22,6 +22,7 @@ import { db } from './config'
 const categoriesRef = collection(db, 'categories')
 const productsRef = collection(db, 'products')
 const ordersRef = collection(db, 'orders')
+const testOrdersRef = collection(db, 'test_orders')
 const couponsRef = collection(db, 'coupons')
 const reviewsRef = collection(db, 'reviews')
 const usersRef = collection(db, 'users')
@@ -152,8 +153,24 @@ export const getFeaturedProducts = async (limitN = 8) => {
  * Create a new order document.
  * @param {object} data - Order payload; createdAt is set server-side.
  */
-export const createOrder = (data) =>
-  addDoc(ordersRef, { ...data, createdAt: serverTimestamp() })
+export const createOrder = (data, isTestMode = false) =>
+  addDoc(isTestMode ? testOrdersRef : ordersRef, {
+    ...data,
+    ...(isTestMode ? { _test: true } : {}),
+    createdAt: serverTimestamp(),
+  })
+
+export const getTestOrders = async () => {
+  const snap = await getDocs(testOrdersRef)
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+}
+
+export const clearTestOrders = async () => {
+  const snap = await getDocs(testOrdersRef)
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)))
+}
 
 /**
  * Get all orders for a specific user, newest first.

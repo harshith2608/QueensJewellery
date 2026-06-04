@@ -52,6 +52,7 @@ export const initiateRazorpayPayment = async ({
   name,
   email,
   phone,
+  isTestMode = false,
   onSuccess,
   onFailure,
 }) => {
@@ -66,7 +67,9 @@ export const initiateRazorpayPayment = async ({
   const normalizedPhone = phone ? phone.replace(/^\+/, '') : ''
 
   const options = {
-    key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+    key: isTestMode
+      ? (import.meta.env.VITE_RAZORPAY_TEST_KEY_ID || import.meta.env.VITE_RAZORPAY_KEY_ID)
+      : import.meta.env.VITE_RAZORPAY_KEY_ID,
     amount,                         // paise
     currency: 'INR',
     name: 'Queens Jewellery',
