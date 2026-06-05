@@ -6,8 +6,15 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER
 const NAV_LINKS = [
   { label: 'Home', to: '/' },
   { label: 'Shop', to: '/shop' },
-  { label: 'About', to: '/about' },
-  { label: 'Contact', to: '/contact' },
+  { label: 'About Us', to: '/about' },
+  { label: 'Contact Us', to: '/contact' },
+]
+
+const POLICY_LINKS = [
+  { label: 'Refund Policy', to: '/refund-policy' },
+  { label: 'Shipping Policy', to: '/shipping-policy' },
+  { label: 'Privacy Policy', to: '/privacy-policy' },
+  { label: 'Terms & Conditions', to: '/terms' },
 ]
 
 function InstagramIcon({ size = 20 }) {
@@ -59,10 +66,19 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {NAV_LINKS.map(({ label, to }) => (
                 <li key={to}>
-                  <Link
-                    to={to}
-                    className="text-ivory/70 hover:text-rose-gold text-sm transition-colors"
-                  >
+                  <Link to={to} className="text-ivory/70 hover:text-rose-gold text-sm transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <h3 className="text-blush font-medium text-sm uppercase tracking-widest mt-5 mb-3">
+              Policies
+            </h3>
+            <ul className="space-y-2.5">
+              {POLICY_LINKS.map(({ label, to }) => (
+                <li key={to}>
+                  <Link to={to} className="text-ivory/70 hover:text-rose-gold text-sm transition-colors">
                     {label}
                   </Link>
                 </li>

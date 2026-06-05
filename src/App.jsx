@@ -21,6 +21,12 @@ const OrderConfirmation = lazy(() => import('./pages/store/OrderConfirmation'))
 const OrderTracking = lazy(() => import('./pages/store/OrderTracking'))
 const Search = lazy(() => import('./pages/store/Search'))
 const NotFound = lazy(() => import('./pages/store/NotFound'))
+const About = lazy(() => import('./pages/store/About'))
+const Contact = lazy(() => import('./pages/store/Contact'))
+const RefundPolicy = lazy(() => import('./pages/store/RefundPolicy'))
+const ShippingPolicy = lazy(() => import('./pages/store/ShippingPolicy'))
+const PrivacyPolicy = lazy(() => import('./pages/store/PrivacyPolicy'))
+const Terms = lazy(() => import('./pages/store/Terms'))
 
 // ─── Admin pages (lazy) ───────────────────────────────────────────────────────
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
@@ -116,6 +122,14 @@ function AppRoutes() {
           <Route path="settings" element={<AdminSettings />} />
           <Route path="notify-requests" element={<AdminNotifyRequests />} />
         </Route>
+
+        {/* Policy pages */}
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
 
         {/* 404 catch-all */}
         <Route path="*" element={<NotFound />} />
