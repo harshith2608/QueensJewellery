@@ -14,6 +14,7 @@ import {
   XCircle,
   Share2,
   Check,
+  Bell,
 } from 'lucide-react'
 
 import Navbar from '../../components/store/Navbar.jsx'
@@ -21,6 +22,7 @@ import Footer from '../../components/store/Footer.jsx'
 import MediaViewer from '../../components/store/MediaViewer.jsx'
 import ReviewSection from '../../components/store/ReviewSection.jsx'
 import ProductCard from '../../components/store/ProductCard.jsx'
+import NotifyMeModal from '../../components/store/NotifyMeModal.jsx'
 import Spinner from '../../components/ui/Spinner.jsx'
 import Button from '../../components/ui/Button.jsx'
 
@@ -162,6 +164,7 @@ export default function Product() {
   const [quantity, setQuantity] = useState(1)
   const [addedFeedback, setAddedFeedback] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [notifyOpen, setNotifyOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -394,6 +397,17 @@ export default function Product() {
                     : 'Add to Cart'}
                 </Button>
 
+                {/* Notify Me — shown only when out of stock */}
+                {isOutOfStock && (
+                  <button
+                    onClick={() => setNotifyOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-rose-gold text-rose-gold rounded-full text-sm font-medium hover:bg-blush transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Notify Me When Available
+                  </button>
+                )}
+
                 <button
                   onClick={handleWhatsApp}
                   className="w-full flex items-center justify-center gap-2 border border-[#25D366] text-[#25D366] hover:bg-[#25D366]/10 py-3.5 rounded-2xl font-medium text-sm transition-colors"
@@ -426,15 +440,24 @@ export default function Product() {
 
       {/* Mobile sticky CTA bar */}
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-20 bg-ivory border-t border-blush px-4 py-3 flex gap-3">
-        <Button
-          onClick={handleAddToCart}
-          disabled={isOutOfStock}
-          className="flex-1"
-          variant={addedFeedback ? 'secondary' : 'primary'}
-        >
-          <ShoppingBag className="w-4 h-4" />
-          {isOutOfStock ? 'Out of Stock' : addedFeedback ? 'Added!' : 'Add to Cart'}
-        </Button>
+        {isOutOfStock ? (
+          <button
+            onClick={() => setNotifyOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-rose-gold text-rose-gold rounded-full text-sm font-medium"
+          >
+            <Bell className="w-4 h-4" />
+            Notify Me
+          </button>
+        ) : (
+          <Button
+            onClick={handleAddToCart}
+            className="flex-1"
+            variant={addedFeedback ? 'secondary' : 'primary'}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            {addedFeedback ? 'Added!' : 'Add to Cart'}
+          </Button>
+        )}
         <button
           onClick={handleWhatsApp}
           className="flex items-center justify-center gap-1.5 px-4 border border-[#25D366] text-[#25D366] rounded-xl text-sm font-medium hover:bg-[#25D366]/10 transition-colors"
@@ -445,6 +468,10 @@ export default function Product() {
       </div>
 
       <Footer />
+
+      {notifyOpen && product && (
+        <NotifyMeModal product={product} onClose={() => setNotifyOpen(false)} />
+      )}
     </div>
   )
 }
