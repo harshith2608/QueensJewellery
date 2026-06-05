@@ -2,10 +2,12 @@ import { Outlet } from 'react-router-dom'
 import { LogOut, Crown } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
+import { useAdminCounts } from '../../hooks/useAdminCounts'
 import toast from 'react-hot-toast'
 
 export default function AdminLayout() {
   const { signOutAdmin } = useAdminAuth()
+  const counts = useAdminCounts()
 
   const handleSignOut = async () => {
     try {
@@ -32,7 +34,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Nav links */}
-        <Sidebar variant="sidebar" />
+        <Sidebar variant="sidebar" counts={counts} />
 
         {/* Sign out */}
         <div className="px-3 pb-4 mt-auto">
@@ -72,7 +74,7 @@ export default function AdminLayout() {
 
       {/* Mobile bottom tab bar */}
       <div className="md:hidden">
-        <Sidebar variant="bottombar" />
+        <Sidebar variant="bottombar" counts={counts} />
       </div>
     </div>
   )
