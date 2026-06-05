@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bell, CheckCheck, Trash2, RefreshCw, MessageCircle } from 'lucide-react'
+import { Bell, CheckCheck, Trash2, RefreshCw, MessageCircle, Copy } from 'lucide-react'
 import {
   getPendingNotifications,
   markNotified,
@@ -66,21 +66,12 @@ export default function NotifyRequests() {
     finally { setW(req.id, false) }
   }
 
-  // Notify all for a product via WhatsApp + mark all notified
-  const handleNotifyAll = async (productId, productName, requests) => {
-    setW(productId, true)
-    try {
-      // Open each WhatsApp link with a small delay so browser doesn't block pop-ups
-      requests.forEach((req, i) => {
-        setTimeout(() => {
-          window.open(buildWhatsAppLink(req.phone, req.productName, req.productId), '_blank')
-        }, i * 600)
-      })
-      await markAllNotifiedForProduct(productId)
-      setNotifications((prev) => prev.filter((n) => n.productId !== productId))
-      toast.success(`Opened WhatsApp for all ${requests.length} customers`)
-    } catch { toast.error('Failed') }
-    finally { setW(productId, false) }
+  // Copy all phone numbers for a product to clipboard
+  const handleCopyNumbers = (productName, requests) => {
+    const numbers = requests.map((r) => `+91${r.phone}`).join('\n')
+    navigator.clipboard.writeText(numbers)
+      .then(() => toast.success(`${requests.length} numbers copied — paste into WhatsApp Business broadcast`))
+      .catch(() => toast.error('Failed to copy'))
   }
 
   const handleMarkOne = async (id) => {
@@ -134,7 +125,8 @@ export default function NotifyRequests() {
         <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
           <MessageCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-green-700 leading-relaxed">
-            Click <strong>Notify via WhatsApp</strong> to open WhatsApp with a pre-filled message for that customer. The request is automatically marked as notified once you click.
+            Click <strong>Notify</strong> on each customer to open WhatsApp with a pre-filled message — auto-marked done after clicking.
+            To message multiple customers at once, click <strong>Copy Numbers</strong> and paste into a <strong>WhatsApp Business broadcast list</strong>.
           </p>
         </div>
       )}
@@ -160,12 +152,12 @@ export default function NotifyRequests() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleNotifyAll(productId, productName, requests)}
-                    disabled={working[productId]}
-                    className="flex items-center gap-1.5 text-xs bg-[#25D366] text-white px-3 py-1.5 rounded-lg hover:bg-[#20b857] transition-colors disabled:opacity-60"
+                    onClick={() => handleCopyNumbers(productName, requests)}
+                    title="Copy all numbers for WhatsApp Business broadcast"
+                    className="flex items-center gap-1.5 text-xs border border-gray-200 text-jewel-muted px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <MessageCircle size={12} />
-                    {working[productId] ? 'Opening…' : `Notify All (${requests.length})`}
+                    <Copy size={12} />
+                    Copy Numbers ({requests.length})
                   </button>
                   <button
                     onClick={() => {
