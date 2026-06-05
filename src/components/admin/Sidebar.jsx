@@ -30,7 +30,7 @@ const NAV_ITEMS = [
 export default function Sidebar({ variant = 'sidebar', onNavClick }) {
   if (variant === 'bottombar') {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 flex justify-around items-center h-16 px-1 shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 flex justify-around items-center h-16 px-1 shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
