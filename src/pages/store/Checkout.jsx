@@ -672,7 +672,7 @@ export default function Checkout() {
             </div>
 
             {/* Sticky mobile bottom bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 lg:hidden bg-white border-t border-blush px-4 py-3 flex items-center gap-3 shadow-lg">
+            <div className="fixed bottom-0 left-0 right-0 z-20 lg:hidden bg-white border-t border-blush px-4 py-3 flex items-center gap-3 shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-jewel-muted">Total</p>
                 <p className="font-semibold text-jewel-dark text-base">{formatPrice(finalTotal)}</p>
