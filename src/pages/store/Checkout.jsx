@@ -64,8 +64,14 @@ export default function Checkout() {
   const discountAmount = locationState.discountAmount ?? 0
   const globalOffer = locationState.globalOffer ?? null
   const globalOfferDiscount = locationState.globalOfferDiscount ?? 0
-  const shippingFee = locationState.shippingFee ?? 0
-  const finalTotal = locationState.finalTotal ?? cartTotal
+
+  // Recalculate shipping from live cart total — don't trust location.state alone
+  // This handles cases where checkout is reached without going through cart (refresh, direct URL)
+  const FREE_SHIPPING_THRESHOLD = 2000
+  const SHIPPING_FEE = 150
+  const discountedTotal = Math.max(0, cartTotal - discountAmount - globalOfferDiscount)
+  const shippingFee = discountedTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
+  const finalTotal = discountedTotal + shippingFee
 
   // Address state
   const savedAddresses = userData?.addresses ?? []

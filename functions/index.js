@@ -1,5 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const REGION = 'asia-south1' // Mumbai — lowest latency for India
+// v2 — forces redeploy to pick up updated secrets
 const { defineSecret } = require('firebase-functions/params')
 const admin = require('firebase-admin')
 const Razorpay = require('razorpay')
@@ -13,7 +14,7 @@ const RAZORPAY_KEY_SECRET = defineSecret('RAZORPAY_KEY_SECRET')
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 function getRazorpay(keyId, keySecret) {
-  return new Razorpay({ key_id: keyId, key_secret: keySecret })
+  return new Razorpay({ key_id: keyId.trim(), key_secret: keySecret.trim() })
 }
 
 /**
