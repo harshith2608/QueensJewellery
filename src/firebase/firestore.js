@@ -342,19 +342,13 @@ export const updateSettings = (data) =>
 
 /**
  * Save a "notify me" request for an out-of-stock product.
- * Prevents duplicate entries for the same phone + product combo.
+ * Uses a deterministic doc ID (productId_phone) to prevent duplicates
+ * without needing a read query — avoids Firestore index + permission issues.
  */
 export const addStockNotification = async ({ productId, productName, phone }) => {
-  // Check for existing request from same phone for same product
-  const q = query(
-    notificationsRef,
-    where('productId', '==', productId),
-    where('phone', '==', phone)
-  )
-  const existing = await getDocs(q)
-  if (!existing.empty) return { duplicate: true }
-
-  await addDoc(notificationsRef, {
+  const docId = `${productId}_${phone}`
+  const ref = doc(db, 'stock_notifications', docId)
+  await setDoc(ref, {
     productId,
     productName,
     phone,
