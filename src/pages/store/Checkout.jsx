@@ -88,7 +88,7 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false)
 
   // Order summary expand on mobile
-  const [summaryOpen, setSummaryOpen] = useState(false)
+  const [summaryOpen, setSummaryOpen] = useState(true)
 
   // Guard: redirect if cart is empty, but not while placing (clearCart fires during payment)
   useEffect(() => {
@@ -533,7 +533,27 @@ export default function Checkout() {
           </div>
 
           {/* ── Right column: order summary ──────────────────────────────── */}
-          <div className="lg:sticky lg:top-24">
+          <div className="lg:sticky lg:top-24 space-y-3">
+            {/* Refund & policy notice */}
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                <span className="text-amber-500 text-sm flex-shrink-0 mt-0.5">⚠️</span>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Refund Policy:</strong> We accept refunds only for damaged items.
+                  An unboxing video is mandatory to process any claim.{' '}
+                  <a href="/refund-policy" className="underline" target="_blank" rel="noopener noreferrer">
+                    Read full policy
+                  </a>
+                </p>
+              </div>
+              <p className="text-center text-xs text-jewel-muted">
+                By placing this order you agree to our{' '}
+                <a href="/terms" className="underline text-rose-gold" target="_blank" rel="noopener noreferrer">Terms</a>
+                {' & '}
+                <a href="/privacy-policy" className="underline text-rose-gold" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              </p>
+            </div>
+
             <div className="bg-white rounded-2xl shadow-sm border border-blush/50 overflow-hidden">
               {/* Mobile toggle */}
               <button
@@ -669,25 +689,6 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Refund & policy notice */}
-          <div className="mt-4 px-4 pb-4 space-y-2">
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
-              <span className="text-amber-500 text-sm flex-shrink-0 mt-0.5">⚠️</span>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                <strong>Refund Policy:</strong> We accept refunds only for damaged items.
-                An unboxing video is mandatory to process any claim.{' '}
-                <a href="/refund-policy" className="underline" target="_blank" rel="noopener noreferrer">
-                  Read full policy
-                </a>
-              </p>
-            </div>
-            <p className="text-center text-xs text-jewel-muted">
-              By placing this order you agree to our{' '}
-              <a href="/terms" className="underline text-rose-gold" target="_blank" rel="noopener noreferrer">Terms</a>
-              {' & '}
-              <a href="/privacy-policy" className="underline text-rose-gold" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-            </p>
-          </div>
         </div>
       </main>
 
