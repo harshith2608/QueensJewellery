@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Menu, X, Search, ShoppingBag, Home, Store, Grid3X3, PackageSearch } from 'lucide-react'
+import { Menu, X, Search, ShoppingBag, Home, Store, Grid3X3, PackageSearch, UserCircle2, LogOut } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import CartDrawer from './CartDrawer.jsx'
 import AnnouncementBar from './AnnouncementBar.jsx'
+import OTPModal from './OTPModal.jsx'
 
 const BASE_navLinks = [
   { label: 'Home', to: '/', icon: Home },
@@ -15,9 +16,12 @@ const BASE_navLinks = [
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const accountRef = useRef(null)
   const { cartCount } = useCart()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -30,6 +34,17 @@ export default function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Close account dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setAccountOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [])
 
   // Close mobile menu on route change
@@ -91,7 +106,7 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Right: search + cart */}
+            {/* Right: search + account + cart */}
             <div className="flex items-center gap-1">
               <button
                 onClick={() => navigate('/search')}
@@ -100,6 +115,50 @@ export default function Navbar() {
               >
                 <Search size={20} />
               </button>
+
+              {/* Account / Login */}
+              {isAuthenticated ? (
+                <div className="relative" ref={accountRef}>
+                  <button
+                    onClick={() => setAccountOpen((v) => !v)}
+                    className="p-2 rounded-full text-rose-gold hover:bg-blush transition-colors"
+                    aria-label="Account"
+                  >
+                    <UserCircle2 size={20} />
+                  </button>
+                  {accountOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-lg border border-blush overflow-hidden z-50">
+                      <div className="px-4 py-3 border-b border-blush">
+                        <p className="text-xs text-jewel-muted">Signed in as</p>
+                        <p className="text-sm font-medium text-jewel-dark truncate">{user?.phoneNumber}</p>
+                      </div>
+                      <Link
+                        to="/orders"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-jewel-dark hover:bg-blush transition-colors"
+                      >
+                        <PackageSearch size={15} />
+                        My Orders
+                      </Link>
+                      <button
+                        onClick={() => { signOut(); setAccountOpen(false) }}
+                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={15} />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setLoginOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-gold text-rose-gold text-xs font-medium hover:bg-blush transition-colors"
+                >
+                  <UserCircle2 size={15} />
+                  Login
+                </button>
+              )}
 
               <button
                 onClick={() => setCartOpen(true)}
@@ -156,6 +215,26 @@ export default function Navbar() {
                 <span className="text-[10px] font-medium">{label}</span>
               </Link>
             ))}
+            {isAuthenticated ? (
+              <Link
+                to="/orders"
+                className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors ${
+                  location.pathname === '/orders' ? 'text-rose-gold' : 'text-jewel-muted'
+                }`}
+              >
+                <UserCircle2 size={20} />
+                <span className="text-[10px] font-medium">Account</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => setLoginOpen(true)}
+                className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors text-jewel-muted"
+              >
+                <UserCircle2 size={20} />
+                <span className="text-[10px] font-medium">Login</span>
+              </button>
+            )}
+
             <button
               onClick={() => setCartOpen(true)}
               className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors relative ${
@@ -179,6 +258,12 @@ export default function Navbar() {
       </div>
 
       <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
+      <OTPModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSuccess={() => setLoginOpen(false)}
+      />
     </>
   )
 }

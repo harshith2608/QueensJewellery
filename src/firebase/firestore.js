@@ -427,3 +427,15 @@ export const updateRefundStatus = (id, status, adminNote = '') =>
     adminNote,
     updatedAt: new Date().toISOString(),
   })
+
+/** Stamp the order as refunded when a refund is approved. */
+export const markOrderRefunded = (orderId, adminNote = '') =>
+  updateDoc(doc(db, 'orders', orderId), {
+    refunded: true,
+    updatedAt: serverTimestamp(),
+    statusHistory: arrayUnion({
+      status: 'refunded',
+      note: adminNote || 'Refund approved by admin',
+      timestamp: new Date().toISOString(),
+    }),
+  })
