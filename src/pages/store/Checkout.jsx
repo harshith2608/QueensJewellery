@@ -10,6 +10,7 @@ import { useCart } from '../../contexts/CartContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTestMode } from '../../contexts/TestModeContext.jsx'
 import { createOrder, incrementCouponUsage, updateUser, decrementProductStock } from '../../firebase/firestore.js'
+import { createRazorpayOrderFn, verifyRazorpayPaymentFn } from '../../firebase/functions.js'
 import { formatPrice } from '../../utils/formatters.js'
 import { initiateRazorpayPayment } from '../../utils/razorpay.js'
 import { buildWhatsAppOrderMessage, openWhatsApp } from '../../utils/whatsapp.js'
@@ -173,26 +174,50 @@ export default function Checkout() {
     }
   }
 
-  const handleRazorpayPayment = (orderBase) => {
+  const handleRazorpayPayment = async (orderBase) => {
+    // Step 1 — Create order server-side (locks amount, prevents tampering)
+    let serverOrderId = ''
+    try {
+      const result = await createRazorpayOrderFn({
+        amount: finalTotal,          // rupees — function converts to paise
+        receipt: `qj_${Date.now()}`,
+      })
+      serverOrderId = result.data.orderId
+    } catch (err) {
+      console.error('Server order creation failed:', err)
+      toast.error('Could not initiate payment. Please try again.')
+      setPlacing(false)
+      throw err
+    }
+
+    // Step 2 — Open Razorpay checkout with server order ID
     return new Promise((resolve, reject) => {
       initiateRazorpayPayment({
-        amount: finalTotal * 100,
-        orderId: '',
+        amount: finalTotal * 100,    // paise (for display in Razorpay modal)
+        orderId: serverOrderId,
         name: getActiveAddress().fullName,
         email: userData?.email || '',
         phone: user?.phoneNumber || getActiveAddress().phone,
         isTestMode,
         onSuccess: async (response) => {
           try {
+            // Step 3 — Verify signature server-side
+            await verifyRazorpayPaymentFn({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            })
+
+            // Step 4 — Save verified order to Firestore
             const now = new Date().toISOString()
             const orderRef = await createOrder({
               ...orderBase,
               paymentMethod: 'razorpay',
               paymentId: response.razorpay_payment_id,
-              ...(response.razorpay_order_id ? { razorpayOrderId: response.razorpay_order_id } : {}),
+              razorpayOrderId: response.razorpay_order_id,
               status: 'confirmed',
               statusHistory: [
-                { status: 'confirmed', note: 'Payment received via Razorpay', timestamp: now },
+                { status: 'confirmed', note: 'Payment verified & received via Razorpay', timestamp: now },
               ],
             }, isTestMode)
 
@@ -200,7 +225,6 @@ export default function Checkout() {
               await incrementCouponUsage(appliedCoupon.id).catch(console.error)
             }
 
-            // Decrement stock for each ordered item (fire-and-forget)
             orderBase.items.forEach(({ id, quantity }) =>
               decrementProductStock(id, quantity).catch(console.error)
             )
@@ -209,6 +233,8 @@ export default function Checkout() {
             navigate(`/order-confirmation?orderId=${orderRef.id}`, { replace: true })
             resolve()
           } catch (err) {
+            console.error('Post-payment error:', err)
+            toast.error('Payment received but order saving failed. Please contact support.')
             reject(err)
           }
         },
