@@ -31,8 +31,12 @@ export default function NotifyMeModal({ product, onClose }) {
       }
       setSubmitted(true)
     } catch (err) {
-      console.error(err)
-      toast.error('Something went wrong. Please try again.')
+      console.error('NotifyMe error:', err?.code, err?.message)
+      if (err?.code === 'permission-denied') {
+        toast.error('Permission denied — check Firestore rules for stock_notifications.')
+      } else {
+        toast.error('Something went wrong. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -94,7 +98,7 @@ export default function NotifyMeModal({ product, onClose }) {
                     onChange={(e) => { setPhone(e.target.value); setError('') }}
                     placeholder="10-digit number"
                     maxLength={10}
-                    className="flex-1 px-3 py-2.5 text-sm text-jewel-dark focus:outline-none bg-white"
+                    className="flex-1 px-3 py-2.5 text-base text-jewel-dark focus:outline-none bg-white"
                     autoFocus
                   />
                 </div>
