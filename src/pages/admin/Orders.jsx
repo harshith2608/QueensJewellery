@@ -1,9 +1,24 @@
 import { useEffect, useState } from 'react'
-import { Eye, X, ChevronDown, Loader2, Clock, Plus, Search, Trash2, ShoppingBag } from 'lucide-react'
+import { Eye, X, ChevronDown, Loader2, Clock, Plus, Search, Trash2, ShoppingBag, MessageCircle } from 'lucide-react'
 import { getAllOrders, updateOrderStatus, getProducts, createOrder, decrementProductStock } from '../../firebase/firestore'
 import OrderStatusBadge from '../../components/admin/OrderStatusBadge'
 import { formatPrice, formatDate } from '../../utils/formatters'
 import toast from 'react-hot-toast'
+
+const STATUS_MESSAGES = {
+  pending:    (name, id) => `Hi ${name}! We have received your Queens Jewellery order #${id}. We'll confirm it shortly. 🙏`,
+  confirmed:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been confirmed. We're preparing it for you! 🎉`,
+  processing: (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} is being packed carefully and will be shipped soon. 📦`,
+  shipped:    (name, id) => `Hi ${name}! Great news! Your Queens Jewellery order #${id} has been shipped and is on its way to you! 🚚 You'll receive it in 3–5 business days.`,
+  delivered:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been delivered. We hope you love it! 💕 Do share a photo with us!`,
+  cancelled:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been cancelled. Please contact us if you have any questions.`,
+}
+
+function openWhatsApp(phone, message) {
+  const cleaned = phone.replace(/\D/g, '')
+  const number = cleaned.startsWith('91') ? cleaned : `91${cleaned}`
+  window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`, '_blank')
+}
 
 const TABS = ['all', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
 const STATUS_OPTIONS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
@@ -12,13 +27,29 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
   const [newStatus, setNewStatus] = useState(order.status)
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [lastNotifiedStatus, setLastNotifiedStatus] = useState(null)
+
+  const customerPhone = order.address?.phone || order.userPhone || ''
+  const customerName = order.address?.fullName || order.address?.name || 'Customer'
+  const shortId = order.id.slice(-8).toUpperCase()
 
   const handleUpdate = async () => {
     if (newStatus === order.status) return toast('Status unchanged')
     setSaving(true)
-    try { await onStatusUpdate(order.id, newStatus, note); toast.success('Status updated'); onClose() }
+    try {
+      await onStatusUpdate(order.id, newStatus, note)
+      toast.success('Status updated')
+      setLastNotifiedStatus(newStatus)
+    }
     catch { toast.error('Failed to update status') }
     finally { setSaving(false) }
+  }
+
+  const handleWhatsApp = (status) => {
+    if (!customerPhone) return toast.error('No customer phone number on this order')
+    const msgFn = STATUS_MESSAGES[status]
+    if (!msgFn) return
+    openWhatsApp(customerPhone, msgFn(customerName, shortId))
   }
 
   const address = order.address || {}
@@ -129,11 +160,27 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
               <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note"
                 className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" />
             </div>
-            <button onClick={handleUpdate} disabled={saving || newStatus === order.status}
-              className="flex items-center gap-2 bg-rose-gold text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-50">
-              {saving && <Loader2 size={14} className="animate-spin" />}
-              {saving ? 'Updating…' : 'Update Status'}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={handleUpdate} disabled={saving || newStatus === order.status}
+                className="flex items-center gap-2 bg-rose-gold text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-50">
+                {saving && <Loader2 size={14} className="animate-spin" />}
+                {saving ? 'Updating…' : 'Update Status'}
+              </button>
+              <button
+                onClick={() => handleWhatsApp(lastNotifiedStatus || order.status)}
+                disabled={!customerPhone}
+                title={!customerPhone ? 'No phone number on this order' : `Send WhatsApp for "${lastNotifiedStatus || order.status}" status`}
+                className="flex items-center gap-2 border border-[#25D366] text-[#25D366] px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#25D366]/10 transition-colors disabled:opacity-40"
+              >
+                <MessageCircle size={15} />
+                Notify on WhatsApp
+              </button>
+            </div>
+            {lastNotifiedStatus && (
+              <p className="text-xs text-jewel-muted">
+                Will send <span className="font-medium capitalize">{lastNotifiedStatus}</span> message · tap again any time to re-send
+              </p>
+            )}
           </div>
         </div>
       </div>
