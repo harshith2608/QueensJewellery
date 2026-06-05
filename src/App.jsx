@@ -8,6 +8,7 @@ import { TestModeProvider } from './contexts/TestModeContext'
 import TestModeBanner from './components/store/TestModeBanner'
 import Toast from './components/ui/Toast'
 import Spinner from './components/ui/Spinner'
+import ScrollToTop from './components/ScrollToTop'
 
 // ─── Store pages (lazy) ───────────────────────────────────────────────────────
 const Home = lazy(() => import('./pages/store/Home'))
@@ -146,6 +147,7 @@ export default function App() {
         <AdminAuthProvider>
           <CartProvider>
             <TestModeProvider>
+              <ScrollToTop />
               <Toast />
               <TestModeBanner />
               <AppRoutes />
