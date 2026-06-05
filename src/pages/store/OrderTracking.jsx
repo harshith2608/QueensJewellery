@@ -192,6 +192,8 @@ function RefundModal({ order, onClose, onSubmitted }) {
         orderId: order.id,
         userId: user.uid,
         userPhone: user.phoneNumber,
+        paymentMethod: order.paymentMethod || null,
+        paymentId: order.paymentId || null,
         orderTotal: order.total,
         items: order.items || [],
         address: order.address || {},

@@ -52,10 +52,32 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Status */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-jewel-muted">Current status:</span>
-            <RefundBadge status={refund.status} />
+          {/* Status + Payment ID */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-jewel-muted">Current status:</span>
+              <RefundBadge status={refund.status} />
+            </div>
+            {refund.paymentMethod === 'razorpay' && refund.paymentId ? (
+              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
+                <span className="text-blue-500 text-sm flex-shrink-0">💳</span>
+                <div className="text-xs text-blue-800 leading-relaxed">
+                  <p className="font-semibold mb-0.5">Razorpay Payment ID</p>
+                  <p className="font-mono select-all break-all">{refund.paymentId}</p>
+                  <p className="mt-1 text-blue-600">Use this ID in the Razorpay dashboard to issue the refund.</p>
+                </div>
+              </div>
+            ) : refund.paymentMethod === 'cod' ? (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                <span className="text-amber-500 text-sm">🚚</span>
+                <p className="text-xs text-amber-800">Cash on Delivery order — refund must be processed manually (bank transfer / UPI).</p>
+              </div>
+            ) : refund.paymentMethod === 'whatsapp' ? (
+              <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
+                <span className="text-gray-500 text-sm">💬</span>
+                <p className="text-xs text-gray-700">WhatsApp order — refund must be processed manually (bank transfer / UPI).</p>
+              </div>
+            ) : null}
           </div>
 
           {/* Customer */}
