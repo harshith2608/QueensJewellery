@@ -260,10 +260,15 @@ export const getProductReviews = async (productId) => {
     reviewsRef,
     where('productId', '==', productId),
     where('approved', '==', true),
-    orderBy('createdAt', 'desc')
   )
   const snap = await getDocs(q)
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => {
+      const ta = a.createdAt?.seconds ?? new Date(a.createdAt).getTime() / 1000 ?? 0
+      const tb = b.createdAt?.seconds ?? new Date(b.createdAt).getTime() / 1000 ?? 0
+      return tb - ta
+    })
 }
 
 /** Get all reviews (admin, including unapproved). */
