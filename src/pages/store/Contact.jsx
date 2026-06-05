@@ -77,7 +77,7 @@ export default function Contact() {
           className="flex items-start gap-4 bg-white border border-blush/50 rounded-2xl p-4 hover:border-rose-gold transition-colors shadow-sm"
         >
           <div className="w-10 h-10 rounded-full bg-blush flex items-center justify-center flex-shrink-0">
-            <Instagram size={20} className="text-rose-gold" />
+            <InstagramIcon size={20} />
           </div>
           <div>
             <p className="font-medium text-jewel-dark text-sm">Instagram</p>
