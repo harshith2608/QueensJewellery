@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Eye, X, Loader2, CheckCircle2, XCircle } from 'lucide-react'
-import { getAllRefunds, updateRefundStatus } from '../../firebase/firestore'
+import { getAllRefunds, updateRefundStatus, markOrderRefunded } from '../../firebase/firestore'
 import { formatDate, formatPrice } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 
@@ -28,7 +28,10 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
     setSaving(status)
     try {
       await updateRefundStatus(refund.id, status, adminNote)
-      toast.success(status === 'approved' ? 'Refund approved' : 'Refund rejected')
+      if (status === 'approved' && refund.orderId) {
+        await markOrderRefunded(refund.orderId, adminNote)
+      }
+      toast.success(status === 'approved' ? 'Refund approved & order updated' : 'Refund rejected')
       onUpdated()
       onClose()
     } catch {

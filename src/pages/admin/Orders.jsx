@@ -30,7 +30,12 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <div>
-            <h2 className="text-base font-semibold text-jewel-dark">Order #{order.id.slice(-8).toUpperCase()}</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-semibold text-jewel-dark">Order #{order.id.slice(-8).toUpperCase()}</h2>
+              {order.refunded && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">Refunded</span>
+              )}
+            </div>
             <p className="text-xs text-jewel-muted mt-0.5">{formatDate(order.createdAt)}</p>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors"><X size={18} /></button>
@@ -540,7 +545,7 @@ export default function Orders() {
                     <td className="px-4 py-3 text-jewel-dark hidden sm:table-cell">{order.address?.fullName || order.address?.name || order.phone || order.userId?.slice(-6) || '—'}</td>
                     <td className="px-4 py-3 text-jewel-muted hidden md:table-cell">{(order.items || []).length} item{(order.items || []).length !== 1 ? 's' : ''}</td>
                     <td className="px-4 py-3 font-medium text-jewel-dark">{formatPrice(order.total)}</td>
-                    <td className="px-4 py-3"><OrderStatusBadge status={order.status} /></td>
+                    <td className="px-4 py-3"><OrderStatusBadge status={order.status} refunded={order.refunded} /></td>
                     <td className="px-4 py-3 text-jewel-muted hidden lg:table-cell">{formatDate(order.createdAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
