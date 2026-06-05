@@ -439,7 +439,7 @@ export default function Product() {
       </main>
 
       {/* Mobile sticky CTA bar */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-20 bg-ivory border-t border-blush px-4 py-3 flex gap-3">
+      <div className="md:hidden fixed left-0 right-0 z-20 bg-ivory border-t border-blush px-4 py-3 flex gap-3" style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
         {isOutOfStock ? (
           <button
             onClick={() => setNotifyOpen(true)}
