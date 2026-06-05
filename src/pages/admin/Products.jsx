@@ -5,16 +5,21 @@ import MediaUpload from '../../components/admin/MediaUpload'
 import { formatPrice } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 
-const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', featured: false, active: true, media: [] }
+const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [] }
 
 function ProductForm({ initial, categories, onSave, onCancel }) {
   const [form, setForm] = useState(initial
-    ? { ...initial, tags: Array.isArray(initial.tags) ? initial.tags.join(', ') : (initial.tags || ''), salePrice: initial.salePrice ?? '' }
+    ? { ...initial, tags: Array.isArray(initial.tags) ? initial.tags.join(', ') : (initial.tags || ''), sizes: Array.isArray(initial.sizes) ? initial.sizes.join(', ') : (initial.sizes || ''), salePrice: initial.salePrice ?? '' }
     : EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [media, setMedia] = useState(initial?.media || [])
 
   const set = (f, v) => setForm((p) => ({ ...p, [f]: v }))
+
+  const isBangleCategory = () => {
+    const cat = categories.find((c) => c.id === form.categoryId)
+    return cat?.name?.toLowerCase().includes('bangle') ?? false
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -32,6 +37,7 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
         salePrice: form.salePrice !== '' ? Number(form.salePrice) : null,
         stock: form.stock !== '' && form.stock !== null ? Number(form.stock) : null,
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        sizes: form.sizes.split(',').map((s) => s.trim()).filter(Boolean),
         featured: form.featured, active: form.active, media,
       })
     } finally { setSaving(false) }
@@ -87,6 +93,15 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
           <input value={form.tags} onChange={(e) => set('tags', e.target.value)}
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. gold, rings, wedding" />
         </div>
+        {isBangleCategory() && (
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-jewel-dark mb-1">
+              Sizes <span className="text-jewel-muted font-normal">(bangle sizes: 2-2, 2-4, 2-6, 2-8, 2-10)</span>
+            </label>
+            <input value={form.sizes} onChange={(e) => set('sizes', e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 2-2, 2-4, 2-6, 2-8, 2-10" />
+          </div>
+        )}
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} className="w-4 h-4 accent-rose-gold" />

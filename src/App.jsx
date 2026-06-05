@@ -40,6 +40,7 @@ const AdminCoupons = lazy(() => import('./pages/admin/Coupons'))
 const AdminReviews = lazy(() => import('./pages/admin/Reviews'))
 const AdminSettings = lazy(() => import('./pages/admin/Settings'))
 const AdminNotifyRequests = lazy(() => import('./pages/admin/NotifyRequests'))
+const AdminRefunds = lazy(() => import('./pages/admin/Refunds'))
 
 // ─── Fallback ─────────────────────────────────────────────────────────────────
 function PageLoader() {
@@ -118,6 +119,7 @@ function AppRoutes() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="refunds" element={<AdminRefunds />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="settings" element={<AdminSettings />} />

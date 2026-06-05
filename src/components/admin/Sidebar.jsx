@@ -8,6 +8,7 @@ import {
   Star,
   Settings,
   Bell,
+  RotateCcw,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { to: '/admin/products', label: 'Products', icon: Package },
   { to: '/admin/categories', label: 'Categories', icon: Grid },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+  { to: '/admin/refunds', label: 'Refunds', icon: RotateCcw },
   { to: '/admin/coupons', label: 'Coupons', icon: Tag },
   { to: '/admin/reviews', label: 'Reviews', icon: Star },
   { to: '/admin/notify-requests', label: 'Notify Requests', icon: Bell },
