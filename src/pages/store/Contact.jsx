@@ -1,4 +1,5 @@
 import { Mail, Phone, MapPin, MessageCircle } from 'lucide-react'
+import PolicyLayout from '../../components/store/PolicyLayout.jsx'
 
 function InstagramIcon({ size = 20 }) {
   return (
@@ -9,7 +10,6 @@ function InstagramIcon({ size = 20 }) {
     </svg>
   )
 }
-import PolicyLayout from '../../components/store/PolicyLayout.jsx'
 
 const WHATSAPP = '916302903510'
 
