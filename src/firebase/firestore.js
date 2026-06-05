@@ -22,6 +22,7 @@ import { db } from './config'
 const categoriesRef = collection(db, 'categories')
 const productsRef = collection(db, 'products')
 const ordersRef = collection(db, 'orders')
+const notificationsRef = collection(db, 'stock_notifications')
 const testOrdersRef = collection(db, 'test_orders')
 const couponsRef = collection(db, 'coupons')
 const reviewsRef = collection(db, 'reviews')
@@ -336,3 +337,60 @@ export const getSettings = async () => {
  */
 export const updateSettings = (data) =>
   setDoc(doc(db, 'settings', 'main'), data, { merge: true })
+
+// ─── Stock Notifications ───────────────────────────────────────────────────────
+
+/**
+ * Save a "notify me" request for an out-of-stock product.
+ * Prevents duplicate entries for the same phone + product combo.
+ */
+export const addStockNotification = async ({ productId, productName, phone }) => {
+  // Check for existing request from same phone for same product
+  const q = query(
+    notificationsRef,
+    where('productId', '==', productId),
+    where('phone', '==', phone)
+  )
+  const existing = await getDocs(q)
+  if (!existing.empty) return { duplicate: true }
+
+  await addDoc(notificationsRef, {
+    productId,
+    productName,
+    phone,
+    notified: false,
+    createdAt: serverTimestamp(),
+  })
+  return { duplicate: false }
+}
+
+/** Get all pending (not yet notified) stock notification requests. */
+export const getPendingNotifications = async () => {
+  const q = query(notificationsRef, where('notified', '==', false))
+  const snap = await getDocs(q)
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+}
+
+/** Mark a notification request as notified. */
+export const markNotified = (id) =>
+  updateDoc(doc(db, 'stock_notifications', id), {
+    notified: true,
+    notifiedAt: serverTimestamp(),
+  })
+
+/** Mark all pending requests for a product as notified. */
+export const markAllNotifiedForProduct = async (productId) => {
+  const q = query(
+    notificationsRef,
+    where('productId', '==', productId),
+    where('notified', '==', false)
+  )
+  const snap = await getDocs(q)
+  await Promise.all(snap.docs.map((d) => markNotified(d.id)))
+}
+
+/** Delete a single notification request. */
+export const deleteNotification = (id) =>
+  deleteDoc(doc(db, 'stock_notifications', id))

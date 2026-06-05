@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, Play, ShoppingBag } from 'lucide-react'
+import { Heart, Play, ShoppingBag, Bell } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext.jsx'
 import { formatPrice } from '../../utils/formatters.js'
+import NotifyMeModal from './NotifyMeModal.jsx'
 
 const PLACEHOLDER_URL = '/placeholder-jewellery.jpg'
 
 export default function ProductCard({ product }) {
   const [wishlisted, setWishlisted] = useState(false)
+  const [notifyOpen, setNotifyOpen] = useState(false)
   const { addToCart, isInCart } = useCart()
 
   if (!product) return null
@@ -29,7 +31,11 @@ export default function ProductCard({ product }) {
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!isOutOfStock) addToCart(product)
+    if (isOutOfStock) {
+      setNotifyOpen(true)
+    } else {
+      addToCart(product)
+    }
   }
 
   const handleWishlist = (e) => {
@@ -110,20 +116,24 @@ export default function ProductCard({ product }) {
         {/* Add to cart */}
         <button
           onClick={handleAddToCart}
-          disabled={isOutOfStock}
+          disabled={isOutOfStock && false}
           className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-full text-xs font-medium transition-colors ${
             isOutOfStock
-              ? 'bg-blush text-jewel-muted cursor-not-allowed'
+              ? 'border border-rose-gold text-rose-gold hover:bg-blush'
               : inCart
               ? 'bg-jewel-dark text-ivory hover:bg-rose-gold'
               : 'bg-rose-gold text-ivory hover:bg-jewel-dark'
           }`}
-          aria-label={isOutOfStock ? 'Out of stock' : inCart ? 'Added to cart' : 'Add to cart'}
+          aria-label={isOutOfStock ? 'Notify me when available' : inCart ? 'Added to cart' : 'Add to cart'}
         >
-          <ShoppingBag size={14} />
-          {isOutOfStock ? 'Out of Stock' : inCart ? 'Added to Cart' : 'Add to Cart'}
+          {isOutOfStock ? <Bell size={14} /> : <ShoppingBag size={14} />}
+          {isOutOfStock ? 'Notify Me' : inCart ? 'Added to Cart' : 'Add to Cart'}
         </button>
       </div>
+
+      {notifyOpen && (
+        <NotifyMeModal product={product} onClose={() => setNotifyOpen(false)} />
+      )}
     </Link>
   )
 }

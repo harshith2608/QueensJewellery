@@ -7,6 +7,7 @@ import {
   Tag,
   Star,
   Settings,
+  Bell,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { to: '/admin/coupons', label: 'Coupons', icon: Tag },
   { to: '/admin/reviews', label: 'Reviews', icon: Star },
+  { to: '/admin/notify-requests', label: 'Notify Requests', icon: Bell },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
