@@ -388,3 +388,42 @@ export const markAllNotifiedForProduct = async (productId) => {
 /** Delete a single notification request. */
 export const deleteNotification = (id) =>
   deleteDoc(doc(db, 'stock_notifications', id))
+
+// ─── Refunds ──────────────────────────────────────────────────────────────────
+
+const refundsRef = collection(db, 'refunds')
+
+/** Create a new refund request (customer-submitted). */
+export const createRefundRequest = (data) =>
+  addDoc(refundsRef, { ...data, status: 'pending', createdAt: new Date().toISOString() })
+
+/** Get all refund requests for a specific user. */
+export const getRefundsByUser = async (userId) => {
+  const q = query(refundsRef, where('userId', '==', userId))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+}
+
+/** Get a refund by orderId (to check if one already exists). */
+export const getRefundByOrderId = async (orderId) => {
+  const q = query(refundsRef, where('orderId', '==', orderId))
+  const snap = await getDocs(q)
+  if (snap.empty) return null
+  return { id: snap.docs[0].id, ...snap.docs[0].data() }
+}
+
+/** Get all refund requests (admin). */
+export const getAllRefunds = async () => {
+  const snap = await getDocs(refundsRef)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+}
+
+/** Update refund status (admin: approve/reject with note). */
+export const updateRefundStatus = (id, status, adminNote = '') =>
+  updateDoc(doc(db, 'refunds', id), {
+    status,
+    adminNote,
+    updatedAt: new Date().toISOString(),
+  })

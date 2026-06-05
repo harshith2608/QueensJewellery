@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Package, MapPin, CreditCard, ChevronDown, ChevronUp,
   ShoppingBag, Clock, CheckCircle2, Circle, Truck, Home, ArrowRight,
+  RotateCcw, X, Upload, Loader2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { useAuth } from '../../contexts/AuthContext.jsx'
-import { getOrdersByUser } from '../../firebase/firestore.js'
+import { getOrdersByUser, createRefundRequest, getRefundsByUser } from '../../firebase/firestore.js'
+import { uploadMedia } from '../../firebase/storage.js'
 import { formatPrice, formatDate } from '../../utils/formatters.js'
 import Navbar from '../../components/store/Navbar.jsx'
 import Footer from '../../components/store/Footer.jsx'
@@ -124,10 +126,184 @@ function StatusTimeline({ currentStatus, statusHistory }) {
   )
 }
 
+// ─── Refund status badge ──────────────────────────────────────────────────────
+
+const REFUND_COLORS = {
+  pending:  'bg-amber-50 text-amber-700 border-amber-200',
+  approved: 'bg-green-50 text-green-700 border-green-200',
+  rejected: 'bg-red-50 text-red-700 border-red-200',
+}
+
+function RefundBadge({ status }) {
+  const cls = REFUND_COLORS[status] || 'bg-gray-50 text-gray-600 border-gray-200'
+  const labels = { pending: 'Refund Pending', approved: 'Refund Approved', rejected: 'Refund Rejected' }
+  return (
+    <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full border ${cls}`}>
+      {labels[status] || status}
+    </span>
+  )
+}
+
+// ─── Refund request modal ─────────────────────────────────────────────────────
+
+const REFUND_REASONS = [
+  'Damaged / defective item',
+  'Wrong item received',
+  'Item not as described',
+  'Missing item',
+  'Other',
+]
+
+function RefundModal({ order, onClose, onSubmitted }) {
+  const { user } = useAuth()
+  const [reason, setReason] = useState('')
+  const [description, setDescription] = useState('')
+  const [proofFiles, setProofFiles] = useState([])
+  const [submitting, setSubmitting] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files)
+    if (proofFiles.length + files.length > 3) {
+      toast.error('Maximum 3 proof images/videos allowed')
+      return
+    }
+    setProofFiles((prev) => [...prev, ...files].slice(0, 3))
+    e.target.value = ''
+  }
+
+  const removeFile = (idx) => setProofFiles((prev) => prev.filter((_, i) => i !== idx))
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!reason) return toast.error('Please select a reason')
+    if (!description.trim()) return toast.error('Please describe the issue')
+    if (proofFiles.length === 0) return toast.error('Please upload at least one proof image or video')
+
+    setSubmitting(true)
+    try {
+      const proofUrls = await Promise.all(
+        proofFiles.map((file, i) =>
+          uploadMedia(file, `refunds/${order.id}_${Date.now()}_${i}`)
+        )
+      )
+
+      await createRefundRequest({
+        orderId: order.id,
+        userId: user.uid,
+        userPhone: user.phoneNumber,
+        orderTotal: order.total,
+        items: order.items || [],
+        address: order.address || {},
+        reason,
+        description: description.trim(),
+        proofUrls,
+      })
+
+      toast.success('Refund request submitted!')
+      onSubmitted()
+      onClose()
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to submit refund request. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 bg-black/50 overflow-y-auto py-8">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-blush sticky top-0 bg-white z-10">
+          <h2 className="font-serif text-lg text-jewel-dark">Request Refund</h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-5">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed">
+            <strong>Refund Policy:</strong> Refunds are accepted only for damaged or defective items.
+            An unboxing video is strongly recommended as proof.
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-2">Reason *</label>
+            <div className="space-y-2">
+              {REFUND_REASONS.map((r) => (
+                <label key={r} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${reason === r ? 'border-rose-gold bg-blush/20' : 'border-blush hover:border-rose-gold/40'}`}>
+                  <input type="radio" name="reason" value={r} checked={reason === r} onChange={() => setReason(r)} className="accent-rose-gold" />
+                  <span className="text-sm text-jewel-dark">{r}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1.5">Describe the issue *</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="Explain the problem in detail..."
+              className="w-full border border-blush rounded-xl px-3 py-2.5 text-sm text-jewel-dark bg-ivory placeholder-jewel-muted focus:outline-none focus:border-rose-gold transition-colors resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1.5">
+              Proof Images/Video * <span className="text-jewel-muted font-normal">(max 3)</span>
+            </label>
+            <div className="space-y-2">
+              {proofFiles.map((file, i) => (
+                <div key={i} className="flex items-center gap-2 p-2 bg-blush/30 rounded-xl text-sm">
+                  <span className="flex-1 truncate text-jewel-dark">{file.name}</span>
+                  <button type="button" onClick={() => removeFile(i)} className="text-red-400 hover:text-red-600 flex-shrink-0">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {proofFiles.length < 3 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 w-full p-3 border-2 border-dashed border-blush rounded-xl text-sm text-jewel-muted hover:border-rose-gold hover:text-rose-gold transition-colors"
+                >
+                  <Upload size={16} />
+                  Upload image or video
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-blush rounded-xl text-sm font-medium text-jewel-muted hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+            <button type="submit" disabled={submitting} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-rose-gold text-white rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-60">
+              {submitting && <Loader2 size={14} className="animate-spin" />}
+              {submitting ? 'Submitting…' : 'Submit Request'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ─── Order row ────────────────────────────────────────────────────────────────
 
-function OrderRow({ order }) {
+function OrderRow({ order, refund, onRefundSubmitted }) {
   const [expanded, setExpanded] = useState(false)
+  const [showRefundModal, setShowRefundModal] = useState(false)
   const itemCount = (order.items || []).reduce((s, i) => s + i.quantity, 0)
   const shortId = order.id.slice(-8).toUpperCase()
 
@@ -144,6 +320,7 @@ function OrderRow({ order }) {
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="font-mono text-rose-gold font-semibold text-sm">#{shortId}</span>
               <StatusBadge status={order.status} />
+              {refund && <RefundBadge status={refund.status} />}
             </div>
             <p className="text-jewel-muted text-xs">
               {formatDate(order.createdAt)} · {itemCount} item{itemCount !== 1 ? 's' : ''} · {formatPrice(order.total)}
@@ -178,7 +355,10 @@ function OrderRow({ order }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-jewel-dark text-sm font-medium line-clamp-2 leading-tight">{item.name}</p>
-                    <p className="text-jewel-muted text-xs">Qty: {item.quantity} · {formatPrice(item.price)}</p>
+                    <p className="text-jewel-muted text-xs">
+                      Qty: {item.quantity} · {formatPrice(item.price)}
+                      {item.selectedSize && <span className="ml-1">· Size: {item.selectedSize}</span>}
+                    </p>
                   </div>
                   <span className="text-jewel-dark text-sm font-semibold flex-shrink-0">
                     {formatPrice(item.price * item.quantity)}
@@ -245,7 +425,11 @@ function OrderRow({ order }) {
               <p>
                 Method:{' '}
                 <span className="text-jewel-dark font-medium capitalize">
-                  {order.paymentMethod === 'razorpay' ? 'Online (Razorpay)' : 'WhatsApp / COD'}
+                  {order.paymentMethod === 'razorpay'
+                    ? 'Online (Razorpay)'
+                    : order.paymentMethod === 'cod'
+                    ? 'Cash on Delivery'
+                    : 'WhatsApp'}
                 </span>
               </p>
               {order.paymentId && (
@@ -264,7 +448,57 @@ function OrderRow({ order }) {
               statusHistory={order.statusHistory || []}
             />
           </div>
+
+          {/* Refund section — only for delivered orders */}
+          {order.status === 'delivered' && (
+            <div className="pt-2 border-t border-blush">
+              {refund ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw size={14} className="text-rose-gold" />
+                    <h3 className="font-serif text-base text-jewel-dark">Refund Request</h3>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3 text-sm space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-jewel-muted">Status</span>
+                      <RefundBadge status={refund.status} />
+                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-jewel-muted">Reason</span>
+                      <span className="text-jewel-dark text-right">{refund.reason}</span>
+                    </div>
+                    {refund.adminNote && (
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-jewel-muted">Admin note</span>
+                        <span className="text-jewel-dark text-right">{refund.adminNote}</span>
+                      </div>
+                    )}
+                    <p className="text-jewel-muted text-xs pt-1">Submitted {formatDate(refund.createdAt)}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <p className="text-jewel-muted text-xs">Received a damaged item? Request a refund.</p>
+                  <button
+                    onClick={() => setShowRefundModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 border border-rose-gold text-rose-gold rounded-xl text-xs font-medium hover:bg-blush transition-colors"
+                  >
+                    <RotateCcw size={13} />
+                    Request Refund
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+      )}
+
+      {showRefundModal && (
+        <RefundModal
+          order={order}
+          onClose={() => setShowRefundModal(false)}
+          onSubmitted={onRefundSubmitted}
+        />
       )}
     </div>
   )
@@ -275,19 +509,29 @@ function OrderRow({ order }) {
 export default function OrderTracking() {
   const { user } = useAuth()
   const [orders, setOrders] = useState([])
+  const [refundMap, setRefundMap] = useState({})   // orderId → refund doc
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const load = async () => {
     if (!user) return
+    try {
+      const [orderData, refundData] = await Promise.all([
+        getOrdersByUser(user.uid),
+        getRefundsByUser(user.uid),
+      ])
+      setOrders(orderData)
+      const map = {}
+      refundData.forEach((r) => { map[r.orderId] = r })
+      setRefundMap(map)
+    } catch (err) {
+      console.error('Failed to fetch orders:', err)
+      toast.error('Failed to load orders. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    getOrdersByUser(user.uid)
-      .then(setOrders)
-      .catch((err) => {
-        console.error('Failed to fetch orders:', err)
-        toast.error('Failed to load orders. Please try again.')
-      })
-      .finally(() => setLoading(false))
-  }, [user])
+  useEffect(() => { load() }, [user])
 
   return (
     <div className="min-h-screen bg-ivory flex flex-col">
@@ -329,7 +573,12 @@ export default function OrderTracking() {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <OrderRow key={order.id} order={order} />
+              <OrderRow
+                key={order.id}
+                order={order}
+                refund={refundMap[order.id] || null}
+                onRefundSubmitted={load}
+              />
             ))}
           </div>
         )}

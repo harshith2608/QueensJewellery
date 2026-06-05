@@ -46,7 +46,10 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
                     : <div className="w-12 h-12 rounded-lg bg-gray-200 flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-jewel-dark truncate">{item.name}</p>
-                    <p className="text-xs text-jewel-muted">Qty: {item.quantity || 1}</p>
+                    <p className="text-xs text-jewel-muted">
+                      Qty: {item.quantity || 1}
+                      {item.selectedSize && ` · Size: ${item.selectedSize}`}
+                    </p>
                   </div>
                   <span className="text-sm font-semibold text-jewel-dark">{formatPrice((item.price || 0) * (item.quantity || 1))}</span>
                 </div>
@@ -74,7 +77,15 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
           <div>
             <h3 className="text-sm font-semibold text-jewel-dark mb-2">Payment</h3>
             <div className="p-3 bg-gray-50 rounded-xl text-sm space-y-1">
-              <div className="flex justify-between"><span className="text-jewel-muted">Method</span><span className="text-jewel-dark capitalize">{order.paymentMethod || order.payment?.method || '—'}</span></div>
+              <div className="flex justify-between">
+                <span className="text-jewel-muted">Method</span>
+                <span className="text-jewel-dark font-medium">
+                  {order.paymentMethod === 'razorpay' ? 'Online (Razorpay)'
+                    : order.paymentMethod === 'cod' ? 'Cash on Delivery'
+                    : order.paymentMethod === 'whatsapp' ? 'WhatsApp'
+                    : order.paymentMethod || '—'}
+                </span>
+              </div>
               {order.paymentId && <div className="flex justify-between"><span className="text-jewel-muted">Payment ID</span><span className="text-jewel-dark font-mono text-xs">{order.paymentId}</span></div>}
               {order.couponCode && <div className="flex justify-between"><span className="text-jewel-muted">Coupon</span><span className="text-green-600 font-medium">{order.couponCode}</span></div>}
             </div>

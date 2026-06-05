@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import {
   MapPin, Plus, CreditCard, MessageCircle, ChevronDown, ChevronUp,
-  ShoppingBag, ArrowLeft, Zap,
+  ShoppingBag, ArrowLeft, Zap, Truck,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -153,6 +153,7 @@ export default function Checkout() {
         price: item.salePrice ?? item.price,
         originalPrice: item.price,
         quantity: item.quantity,
+        selectedSize: item.selectedSize || null,
       })),
       address,
       subtotal: cartTotal,
@@ -170,6 +171,8 @@ export default function Checkout() {
     try {
       if (paymentMethod === 'razorpay') {
         await handleRazorpayPayment(orderBase)
+      } else if (paymentMethod === 'cod') {
+        await handleCODOrder(orderBase)
       } else {
         await handleWhatsAppOrder(orderBase)
       }
@@ -253,6 +256,31 @@ export default function Checkout() {
         },
       })
     })
+  }
+
+  const handleCODOrder = async (orderBase) => {
+    const now = new Date().toISOString()
+    const orderRef = await createOrder({
+      ...orderBase,
+      paymentMethod: 'cod',
+      paymentId: null,
+      status: 'pending',
+      statusHistory: [
+        { status: 'pending', note: 'Order placed — Cash on Delivery', timestamp: now },
+      ],
+    }, isTestMode)
+
+    if (appliedCoupon?.id) {
+      await incrementCouponUsage(appliedCoupon.id).catch(console.error)
+    }
+
+    orderBase.items.forEach(({ id, quantity }) =>
+      decrementProductStock(id, quantity).catch(console.error)
+    )
+
+    clearCart()
+    navigate(`/order-confirmation?orderId=${orderRef.id}`, { replace: true })
+    setPlacing(false)
   }
 
   const handleWhatsAppOrder = async (orderBase) => {
@@ -502,6 +530,33 @@ export default function Checkout() {
                   </div>
                 </label>
 
+                {/* COD */}
+                <label
+                  className={`flex gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'cod'
+                      ? 'border-amber-500 bg-amber-50'
+                      : 'border-blush hover:border-amber-400/60'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="cod"
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                    className="mt-0.5 accent-amber-500 flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Truck size={16} className="text-amber-600" />
+                      <span className="font-medium text-jewel-dark text-sm">Cash on Delivery</span>
+                    </div>
+                    <p className="text-jewel-muted text-xs">
+                      Pay {formatPrice(finalTotal)} in cash when your order arrives.
+                    </p>
+                  </div>
+                </label>
+
                 {/* WhatsApp */}
                 <label
                   className={`flex gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
@@ -582,7 +637,10 @@ export default function Checkout() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-jewel-dark text-xs font-medium line-clamp-2 leading-tight">{item.name}</p>
-                          <p className="text-jewel-muted text-xs">Qty: {item.quantity}</p>
+                          <p className="text-jewel-muted text-xs">
+                            Qty: {item.quantity}
+                            {item.selectedSize && ` · Size: ${item.selectedSize}`}
+                          </p>
                         </div>
                         <span className="text-jewel-dark text-xs font-semibold flex-shrink-0">
                           {formatPrice(price * item.quantity)}
@@ -649,15 +707,11 @@ export default function Checkout() {
                   onClick={handlePlaceOrder}
                 >
                   {paymentMethod === 'razorpay' ? (
-                    <>
-                      <Zap size={16} />
-                      Pay {formatPrice(finalTotal)}
-                    </>
+                    <><Zap size={16} />Pay {formatPrice(finalTotal)}</>
+                  ) : paymentMethod === 'cod' ? (
+                    <><Truck size={16} />Place COD Order</>
                   ) : (
-                    <>
-                      <MessageCircle size={16} />
-                      Place Order on WhatsApp
-                    </>
+                    <><MessageCircle size={16} />Place Order on WhatsApp</>
                   )}
                 </Button>
 
@@ -684,7 +738,7 @@ export default function Checkout() {
                 disabled={placing}
                 onClick={handlePlaceOrder}
               >
-                {paymentMethod === 'razorpay' ? 'Pay Now' : 'Order via WhatsApp'}
+                {paymentMethod === 'razorpay' ? 'Pay Now' : paymentMethod === 'cod' ? 'Place COD Order' : 'Order via WhatsApp'}
               </Button>
             </div>
           </div>
