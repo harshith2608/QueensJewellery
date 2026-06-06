@@ -179,7 +179,7 @@ export default function Cart() {
 
               return (
                 <div
-                  key={item.id}
+                  key={item.cartKey || item.id}
                   className="flex gap-4 bg-white rounded-2xl p-4 shadow-sm border border-blush/50"
                 >
                   {/* Product image */}
@@ -206,6 +206,9 @@ export default function Cart() {
                         {item.name}
                       </h3>
                     </Link>
+                    {item.selectedSize && (
+                      <span className="text-xs text-jewel-muted">Size: <span className="font-medium text-jewel-dark">{item.selectedSize}</span></span>
+                    )}
 
                     {/* Price */}
                     <div className="flex items-baseline gap-2 mt-1">
@@ -223,7 +226,7 @@ export default function Cart() {
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center border border-blush rounded-full overflow-hidden">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.cartKey || item.id, item.quantity - 1)}
                           className="px-3 py-1.5 text-jewel-muted hover:text-jewel-dark hover:bg-blush transition-colors"
                           aria-label="Decrease quantity"
                         >
@@ -233,7 +236,7 @@ export default function Cart() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.cartKey || item.id, item.quantity + 1)}
                           disabled={item.quantity >= (item.stock ?? 99)}
                           className="px-3 py-1.5 text-jewel-muted hover:text-jewel-dark hover:bg-blush transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                           aria-label="Increase quantity"
@@ -247,7 +250,7 @@ export default function Cart() {
                           {formatPrice(effectivePrice * item.quantity)}
                         </span>
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.cartKey || item.id)}
                           className="p-2 text-jewel-muted hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                           aria-label={`Remove ${item.name}`}
                         >

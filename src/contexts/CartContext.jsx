@@ -27,12 +27,13 @@ export function CartProvider({ children }) {
 
   const addToCart = (product) => {
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id)
+      // Use id + selectedSize as unique cart key so same product in different sizes = separate items
+      const cartKey = product.selectedSize ? `${product.id}_${product.selectedSize}` : product.id
+      const existing = prev.find((item) => item.cartKey === cartKey)
       if (existing) {
-        // null stock = unlimited; otherwise cap at available stock
         const maxQty = item => item.stock === null ? Infinity : (item.stock ?? 99)
         return prev.map((item) =>
-          item.id === product.id
+          item.cartKey === cartKey
             ? { ...item, quantity: Math.min(item.quantity + 1, maxQty(item)) }
             : item
         )
@@ -40,30 +41,32 @@ export function CartProvider({ children }) {
       return [
         ...prev,
         {
+          cartKey,
           id: product.id,
           name: product.name,
           price: product.price,
           salePrice: product.salePrice ?? null,
           image: product.media?.find((m) => m.type === 'image')?.url ?? product.media?.[0]?.url ?? '',
           quantity: 1,
-          stock: product.stock ?? null,   // null = unlimited
+          stock: product.stock ?? null,
+          selectedSize: product.selectedSize || null,
         },
       ]
     })
   }
 
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id))
+  const removeFromCart = (cartKey) => {
+    setCartItems((prev) => prev.filter((item) => item.cartKey !== cartKey))
   }
 
-  const updateQuantity = (id, qty) => {
+  const updateQuantity = (cartKey, qty) => {
     if (qty < 1) {
-      removeFromCart(id)
+      removeFromCart(cartKey)
       return
     }
     setCartItems((prev) =>
       prev.map((item) => {
-        if (item.id !== id) return item
+        if (item.cartKey !== cartKey) return item
         const maxQty = item.stock === null ? Infinity : (item.stock ?? 99)
         return { ...item, quantity: Math.min(qty, maxQty) }
       })

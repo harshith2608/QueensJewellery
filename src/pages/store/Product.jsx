@@ -162,6 +162,8 @@ export default function Product() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  const [selectedSize, setSelectedSize] = useState('')
+  const [sizeError, setSizeError] = useState(false)
   const [addedFeedback, setAddedFeedback] = useState(false)
   const [copied, setCopied] = useState(false)
   const [notifyOpen, setNotifyOpen] = useState(false)
@@ -194,9 +196,16 @@ export default function Product() {
   const maxQty = product?.stock || 99
   const inCart = product ? isInCart(product.id) : false
 
+  const hasSizes = Array.isArray(product?.sizes) && product.sizes.length > 0
+
   const handleAddToCart = () => {
     if (!product || isOutOfStock) return
-    for (let i = 0; i < quantity; i++) addToCart(product)
+    if (hasSizes && !selectedSize) {
+      setSizeError(true)
+      return
+    }
+    setSizeError(false)
+    for (let i = 0; i < quantity; i++) addToCart({ ...product, selectedSize: selectedSize || null })
     setAddedFeedback(true)
     setTimeout(() => setAddedFeedback(false), 2000)
   }
@@ -348,6 +357,37 @@ export default function Product() {
                       {tag}
                     </span>
                   ))}
+                </div>
+              )}
+
+              {/* Size selector — shown only for products with sizes */}
+              {hasSizes && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-medium text-jewel-dark">Size:</span>
+                    {selectedSize && (
+                      <span className="text-sm text-rose-gold font-semibold">{selectedSize}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => { setSelectedSize(size); setSizeError(false) }}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium border-2 transition-colors ${
+                          selectedSize === size
+                            ? 'border-rose-gold bg-rose-gold text-ivory'
+                            : 'border-blush text-jewel-dark hover:border-rose-gold'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                  {sizeError && (
+                    <p className="text-red-500 text-xs mt-1.5">Please select a size before adding to cart</p>
+                  )}
                 </div>
               )}
 
