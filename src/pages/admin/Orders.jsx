@@ -9,7 +9,7 @@ const STATUS_MESSAGES = {
   pending:    (name, id) => `Hi ${name}! We have received your Queens Jewellery order #${id}. We'll confirm it shortly. 🙏`,
   confirmed:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been confirmed. We're preparing it for you! 🎉`,
   processing: (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} is being packed carefully and will be shipped soon. 📦`,
-  shipped:    (name, id) => `Hi ${name}! Great news! Your Queens Jewellery order #${id} has been shipped and is on its way to you! 🚚 You'll receive it in 3–5 business days.`,
+  shipped:    (name, id) => `Hi ${name}! Great news! Your Queens Jewellery order #${id} has been shipped and is on its way to you! 🚚 You'll receive it in 7–8 business days.`,
   delivered:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been delivered. We hope you love it! 💕 Do share a photo with us!`,
   cancelled:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been cancelled. Please contact us if you have any questions.`,
 }

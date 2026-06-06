@@ -55,7 +55,7 @@ export default function RefundPolicy() {
           </li>
           <li>
             If approved, the refund will be processed to your original payment method within
-            <strong> 5–7 business days</strong>.
+            <strong> 7–8 business days</strong>.
           </li>
         </ol>
       </Section>
