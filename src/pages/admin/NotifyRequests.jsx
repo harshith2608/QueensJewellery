@@ -9,7 +9,7 @@ import {
 import { formatDate } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 
-const STORE_URL = 'https://queens-jewellery.vercel.app'
+const STORE_URL = 'https://queensjewellery.vercel.app'
 
 function buildWhatsAppLink(phone, productName, productId) {
   const productUrl = `${STORE_URL}/product/${productId}`
