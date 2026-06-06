@@ -1,9 +1,232 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, X, Search, Loader2, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Search, Loader2, ChevronDown, Eye, ShoppingBag, Bell, Heart, Star, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import { getProducts, addProduct, updateProduct, deleteProduct, getAllCategories } from '../../firebase/firestore'
 import MediaUpload from '../../components/admin/MediaUpload'
 import { formatPrice } from '../../utils/formatters'
 import toast from 'react-hot-toast'
+
+// ─── Preview helpers ──────────────────────────────────────────────────────────
+
+function buildPreviewProduct(form, media, categories) {
+  const price = Number(form.price) || 0
+  const salePrice = form.salePrice !== '' && form.salePrice != null ? Number(form.salePrice) : null
+  const stock = form.stock !== '' && form.stock != null ? Number(form.stock) : null
+  const cat = categories.find((c) => c.id === form.categoryId)
+  return {
+    id: '__preview__',
+    name: form.name || 'Product Name',
+    price,
+    salePrice: salePrice != null && salePrice < price ? salePrice : null,
+    description: form.description || '',
+    tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+    sizes: form.sizes ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean) : [],
+    media: media || [],
+    stock,
+    featured: form.featured,
+    categoryName: cat?.name || '',
+  }
+}
+
+// ── Static Shop Tile preview (no router/cart context) ─────────────────────────
+function ShopTilePreview({ product }) {
+  const { name, price, salePrice, media, stock } = product
+  const firstMedia = Array.isArray(media) && media.length > 0 ? media[0] : null
+  const imageUrl = firstMedia?.url || null
+  const onSale = salePrice != null && salePrice < price
+  const isOutOfStock = stock === 0
+
+  return (
+    <div className="relative bg-ivory rounded-2xl overflow-hidden w-[200px] shadow-lg flex-shrink-0">
+      <div className="relative aspect-square overflow-hidden bg-blush">
+        {imageUrl ? (
+          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingBag size={40} className="text-rose-gold/30" />
+          </div>
+        )}
+        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
+          {isOutOfStock && <span className="bg-jewel-dark text-ivory text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Out of Stock</span>}
+          {onSale && !isOutOfStock && <span className="bg-rose-gold text-ivory text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Sale</span>}
+        </div>
+        <div className="absolute top-2 right-2 p-2 rounded-full bg-ivory/80 text-jewel-muted">
+          <Heart size={14} />
+        </div>
+      </div>
+      <div className="p-3 space-y-2">
+        <h3 className="font-serif text-jewel-dark text-sm leading-snug line-clamp-2 min-h-[2.5rem]">
+          {name || 'Product Name'}
+        </h3>
+        <div className="flex items-baseline gap-2">
+          <span className="text-rose-gold font-semibold text-sm">{formatPrice(onSale ? salePrice : price)}</span>
+          {onSale && <span className="text-jewel-muted text-xs line-through">{formatPrice(price)}</span>}
+        </div>
+        <div className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-full text-xs font-medium ${isOutOfStock ? 'border border-rose-gold text-rose-gold' : 'bg-rose-gold text-ivory'}`}>
+          {isOutOfStock ? <><Bell size={12} /> Notify Me</> : <><ShoppingBag size={12} /> Add to Cart</>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Static Product Page preview ───────────────────────────────────────────────
+function ProductPagePreview({ product }) {
+  const { name, price, salePrice, description, tags, sizes, media, stock, categoryName } = product
+  const firstMedia = Array.isArray(media) && media.length > 0 ? media[0] : null
+  const imageUrl = firstMedia?.url || null
+  const onSale = salePrice != null && salePrice < price
+  const effectivePrice = onSale ? salePrice : price
+  const isOutOfStock = stock === 0
+  const lowStock = stock != null && stock > 0 && stock <= 5
+
+  return (
+    <div className="bg-ivory rounded-xl overflow-hidden text-sm max-w-sm w-full">
+      {/* Image */}
+      <div className="aspect-square bg-blush overflow-hidden rounded-xl mb-4">
+        {imageUrl ? (
+          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingBag size={60} className="text-rose-gold/20" />
+          </div>
+        )}
+      </div>
+
+      {/* Breadcrumb stub */}
+      <p className="text-[10px] text-jewel-muted mb-2 px-1">
+        Home / {categoryName || 'Category'} / <span className="text-jewel-dark font-medium">{name || 'Product'}</span>
+      </p>
+
+      {/* Name */}
+      <h1 className="font-serif text-2xl text-jewel-dark leading-tight mb-2">{name || 'Product Name'}</h1>
+
+      {/* Rating stub */}
+      <div className="flex items-center gap-1 mb-3">
+        {[1,2,3,4,5].map((s) => <Star key={s} size={13} className="text-jewel-muted" />)}
+        <span className="text-xs text-jewel-muted ml-1">No reviews yet</span>
+      </div>
+
+      {/* Price */}
+      <div className="flex items-baseline gap-3 mb-3">
+        <span className="font-serif text-2xl text-rose-gold font-semibold">{formatPrice(effectivePrice)}</span>
+        {onSale && <span className="text-jewel-muted text-base line-through">{formatPrice(price)}</span>}
+        {onSale && <span className="text-xs bg-rose-gold text-white px-2 py-0.5 rounded-full font-medium">Save {Math.round(((price - salePrice) / price) * 100)}%</span>}
+      </div>
+
+      {/* Stock */}
+      <div className="mb-3">
+        {isOutOfStock ? (
+          <div className="flex items-center gap-1.5 text-red-500 text-sm font-medium"><XCircle size={14} /> Out of Stock</div>
+        ) : lowStock ? (
+          <div className="flex items-center gap-1.5 text-amber-600 text-sm font-medium"><AlertTriangle size={14} /> Only {stock} left</div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-green-600 text-sm font-medium"><CheckCircle2 size={14} /> In Stock</div>
+        )}
+      </div>
+
+      {/* Description */}
+      {description && (
+        <div className="mb-3">
+          <h3 className="font-serif text-base text-jewel-dark mb-1">Description</h3>
+          <p className="text-jewel-muted text-xs leading-relaxed line-clamp-4">{description}</p>
+        </div>
+      )}
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {tags.map((tag) => (
+            <span key={tag} className="text-xs bg-blush text-jewel-muted px-2.5 py-0.5 rounded-full">{tag}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Sizes */}
+      {sizes.length > 0 && (
+        <div className="mb-3">
+          <p className="text-sm font-medium text-jewel-dark mb-1.5">Size:</p>
+          <div className="flex flex-wrap gap-2">
+            {sizes.map((size) => (
+              <div key={size} className="px-3 py-1 rounded-full text-xs font-medium border-2 border-blush text-jewel-dark">{size}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CTA */}
+      <div className="space-y-2 mt-3">
+        <div className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-medium ${isOutOfStock ? 'bg-gray-200 text-gray-400' : 'bg-rose-gold text-ivory'}`}>
+          <ShoppingBag size={16} />{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </div>
+        <div className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-medium border border-[#25D366] text-[#25D366]">
+          Order on WhatsApp
+        </div>
+      </div>
+
+      <p className="text-[10px] text-jewel-muted mt-3 pt-3 border-t border-blush">Free shipping on orders above ₹999 · Easy returns within 7 days</p>
+    </div>
+  )
+}
+
+// ── Preview modal ─────────────────────────────────────────────────────────────
+function PreviewModal({ form, media, categories, onClose }) {
+  const [tab, setTab] = useState('tile')
+  const product = buildPreviewProduct(form, media, categories)
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 bg-black/50 overflow-y-auto py-8">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div>
+            <h2 className="text-base font-semibold text-jewel-dark">Product Preview</h2>
+            <p className="text-xs text-jewel-muted mt-0.5">Live preview based on your current inputs</p>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100"><X size={18} /></button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 px-5 pt-4">
+          {[
+            { key: 'tile', label: 'Shop Tile', desc: 'How it appears in the product grid' },
+            { key: 'page', label: 'Product Page', desc: 'How the detail page looks' },
+          ].map(({ key, label, desc }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${tab === key ? 'bg-rose-gold text-white shadow-sm' : 'bg-gray-50 text-jewel-muted hover:bg-blush/50'}`}
+            >
+              <div className="font-semibold">{label}</div>
+              <div className={`text-[11px] mt-0.5 ${tab === key ? 'text-white/80' : 'text-jewel-muted'}`}>{desc}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Preview area */}
+        <div className="p-6">
+          {tab === 'tile' ? (
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-xs text-jewel-muted text-center">This is how the card looks in the shop grid (200px wide)</p>
+              <ShopTilePreview product={product} />
+              {/* Multiple-card context hint */}
+              <div className="flex gap-3 opacity-20 pointer-events-none scale-90">
+                <ShopTilePreview product={{ ...product, name: product.name || 'Other Product' }} />
+                <ShopTilePreview product={{ ...product, name: product.name || 'Other Product' }} />
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="w-full max-w-sm">
+                <p className="text-xs text-jewel-muted text-center mb-4">Simplified view of the product detail page</p>
+                <ProductPagePreview product={product} />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [] }
 
@@ -13,6 +236,7 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
     : EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [media, setMedia] = useState(initial?.media || [])
+  const [showPreview, setShowPreview] = useState(false)
 
   const set = (f, v) => setForm((p) => ({ ...p, [f]: v }))
 
@@ -117,13 +341,29 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
         <label className="block text-sm font-medium text-jewel-dark mb-2">Media (Images &amp; Videos)</label>
         <MediaUpload existingMedia={media} onUpdate={setMedia} path="products" />
       </div>
-      <div className="flex gap-3 pt-2 justify-end">
+      <div className="flex gap-3 pt-2 justify-end flex-wrap">
         <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-jewel-muted hover:bg-gray-50 transition-colors">Cancel</button>
+        <button
+          type="button"
+          onClick={() => setShowPreview(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-gold/40 text-rose-gold text-sm font-medium hover:bg-blush/50 transition-colors"
+        >
+          <Eye size={15} /> Preview
+        </button>
         <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-60">
           {saving && <Loader2 size={14} className="animate-spin" />}
           {saving ? 'Saving…' : 'Save Product'}
         </button>
       </div>
+
+      {showPreview && (
+        <PreviewModal
+          form={form}
+          media={media}
+          categories={categories}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </form>
   )
 }
