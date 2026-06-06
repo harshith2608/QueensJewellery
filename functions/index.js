@@ -103,8 +103,8 @@ exports.processRazorpayRefund = onCall(
 
     const { paymentId, amount, refundId, orderId, adminNote = '' } = request.data
 
-    if (!paymentId || !amount || !refundId || !orderId) {
-      throw new HttpsError('invalid-argument', 'Missing required fields: paymentId, amount, refundId, orderId.')
+    if (!paymentId || !amount || !orderId) {
+      throw new HttpsError('invalid-argument', 'Missing required fields: paymentId, amount, orderId.')
     }
 
     const razorpay = getRazorpay(RAZORPAY_KEY_ID.value(), RAZORPAY_KEY_SECRET.value())
@@ -122,17 +122,20 @@ exports.processRazorpayRefund = onCall(
       throw new HttpsError('internal', message)
     }
 
-    // Update both refund doc and order doc atomically
+    // Update Firestore atomically
     const db = admin.firestore()
     const batch = db.batch()
 
-    batch.update(db.collection('refunds').doc(refundId), {
-      status: 'approved',
-      adminNote: adminNote || 'Refund approved by admin',
-      razorpayRefundId: rzRefund.id,
-      razorpayRefundStatus: rzRefund.status,
-      updatedAt: new Date().toISOString(),
-    })
+    // Only update refund doc if a refundId was provided (customer-submitted refund request)
+    if (refundId) {
+      batch.update(db.collection('refunds').doc(refundId), {
+        status: 'approved',
+        adminNote: adminNote || 'Refund approved by admin',
+        razorpayRefundId: rzRefund.id,
+        razorpayRefundStatus: rzRefund.status,
+        updatedAt: new Date().toISOString(),
+      })
+    }
 
     batch.update(db.collection('orders').doc(orderId), {
       refunded: true,
