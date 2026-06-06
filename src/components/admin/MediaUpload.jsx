@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
-import { Upload, X, Film, Image, CheckCircle, Loader2, AlertTriangle } from 'lucide-react'
-import { uploadMedia } from '../../firebase/storage'
+import { Upload, X, Film, Image, CheckCircle, Loader2, AlertTriangle, Trash2 } from 'lucide-react'
+import { uploadMedia, deleteMedia } from '../../firebase/storage'
 import toast from 'react-hot-toast'
 
 // Formats Chrome / Firefox can actually play
@@ -22,6 +22,8 @@ export default function MediaUpload({ existingMedia = [], onUpdate, path = 'uplo
   const [files, setFiles] = useState([]) // { id, file, objectUrl, type, status, progress, url, isMov }
   const [uploadedMedia, setUploadedMedia] = useState(existingMedia)
   const [dragOver, setDragOver] = useState(false)
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null) // index pending permanent delete
+  const [deleting, setDeleting] = useState(false)
   const inputRef = useRef(null)
 
   // Keep a ref so async callbacks can read the latest uploadedMedia without stale closure
@@ -80,6 +82,28 @@ export default function MediaUpload({ existingMedia = [], onUpdate, path = 'uplo
     uploadedMediaRef.current = updated
     const done = files.filter((f) => f.status === 'done').map((f) => ({ type: f.type, url: f.url }))
     onUpdate?.([...updated, ...done])
+  }
+
+  // Permanently delete from Firebase Storage + remove from product
+  const deleteFromStorage = async (index) => {
+    const item = uploadedMedia[index]
+    setDeleting(true)
+    try {
+      await deleteMedia(item.url)
+      removeExisting(index)
+      toast.success('File deleted from storage')
+    } catch (err) {
+      // If already gone, just remove from list
+      if (err.code === 'storage/object-not-found') {
+        removeExisting(index)
+        toast.success('Removed (file was already deleted from storage)')
+      } else {
+        toast.error('Failed to delete: ' + err.message)
+      }
+    } finally {
+      setDeleting(false)
+      setConfirmDeleteIdx(null)
+    }
   }
 
   // Core upload logic — returns { type, url } on success, throws on failure
@@ -211,15 +235,52 @@ export default function MediaUpload({ existingMedia = [], onUpdate, path = 'uplo
                 ) : (
                   <img src={m.url} alt="" className="w-full h-full object-cover" />
                 )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); removeExisting(i) }}
-                    className="p-1 bg-red-500 rounded-full text-white"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
+
+                {/* Confirm-delete overlay */}
+                {confirmDeleteIdx === i ? (
+                  <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1.5 p-1">
+                    <p className="text-white text-[10px] text-center leading-tight font-medium">Delete from Storage?</p>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); deleteFromStorage(i) }}
+                        disabled={deleting}
+                        className="px-2 py-1 bg-red-500 rounded text-white text-[10px] font-semibold hover:bg-red-600 disabled:opacity-60"
+                      >
+                        {deleting ? '…' : 'Yes, Delete'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(null) }}
+                        className="px-2 py-1 bg-gray-500 rounded text-white text-[10px] font-semibold hover:bg-gray-600"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                    {/* X = remove from product only */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); removeExisting(i) }}
+                      title="Remove from product (keeps file in storage)"
+                      className="p-1.5 bg-gray-700 rounded-full text-white hover:bg-gray-800"
+                    >
+                      <X size={13} />
+                    </button>
+                    {/* Trash = permanently delete from Firebase Storage */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(i) }}
+                      title="Delete permanently from Firebase Storage"
+                      className="p-1.5 bg-red-500 rounded-full text-white hover:bg-red-600"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                )}
+
                 <span className="absolute bottom-1 left-1 bg-black/60 rounded text-white p-0.5">
                   {m.type === 'video' ? <Film size={10} /> : <Image size={10} />}
                 </span>
