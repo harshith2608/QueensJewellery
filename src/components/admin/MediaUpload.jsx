@@ -248,6 +248,10 @@ export default function MediaUpload({ existingMedia = [], onUpdate, path = 'uplo
     setFiles((prev) => {
       const entry = prev.find((f) => f.id === id)
       if (entry?.objectUrl) URL.revokeObjectURL(entry.objectUrl)
+      // If already uploaded to Firebase Storage, delete it (prevent orphaned files)
+      if (entry?.status === 'done' && entry?.url) {
+        deleteMedia(entry.url).catch(() => {}) // best-effort, don't block UI
+      }
       const next = prev.filter((f) => f.id !== id)
       const done = next.filter((f) => f.status === 'done').map((f) => ({ type: f.type, url: f.url }))
       onUpdate?.([...uploadedMediaRef.current, ...done])
