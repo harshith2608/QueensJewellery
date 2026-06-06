@@ -23,17 +23,16 @@ const createImage = (url) =>
 async function getCroppedBlob(imageSrc, pixelCrop, fileType = 'image/jpeg') {
   const image = await createImage(imageSrc)
   const canvas = document.createElement('canvas')
-  // Cap output at 1400px on longest side to keep file sizes sensible
-  const scale = Math.min(1, 1400 / Math.max(pixelCrop.width, pixelCrop.height))
-  canvas.width = Math.round(pixelCrop.width * scale)
-  canvas.height = Math.round(pixelCrop.height * scale)
+  // Use full original resolution — no downscaling
+  canvas.width = pixelCrop.width
+  canvas.height = pixelCrop.height
   const ctx = canvas.getContext('2d')
   ctx.drawImage(
     image,
     pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
     0, 0, canvas.width, canvas.height
   )
-  return new Promise((resolve) => canvas.toBlob(resolve, fileType, 0.92))
+  return new Promise((resolve) => canvas.toBlob(resolve, fileType, 0.95))
 }
 
 // ─── Crop modal ────────────────────────────────────────────────────────────────
