@@ -37,10 +37,12 @@ function StarRating({ value, onChange, readOnly = false, size = 'md' }) {
   )
 }
 
-// ─── Mask customer name: "Priya Sharma" → "Priya S." ─────────────────────────
+// ─── Safe display name: never show phone numbers ──────────────────────────────
 
 function maskName(name) {
-  if (!name) return 'Customer'
+  if (!name) return 'Verified Buyer'
+  // If it looks like a phone number, never display it
+  if (/^[+\d\s\-().]{7,}$/.test(name.trim())) return 'Verified Buyer'
   const parts = name.trim().split(/\s+/)
   if (parts.length === 1) return parts[0]
   return `${parts[0]} ${parts[parts.length - 1][0]}.`
@@ -66,7 +68,8 @@ function ReviewFormModal({ productId, onClose, onSubmitted }) {
       await addReview({
         productId,
         userId: user.uid,
-        customerName: userData?.name || user.displayName || user.phoneNumber || 'Customer',
+        // Never store phone number — use profile name or generic fallback
+        customerName: userData?.name?.trim() || user.displayName?.trim() || 'Verified Buyer',
         rating,
         comment: comment.trim(),
         approved: false,
