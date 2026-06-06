@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Eye, X, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { Eye, X, Loader2, CheckCircle2, XCircle, Zap } from 'lucide-react'
 import { getAllRefunds, updateRefundStatus, markOrderRefunded } from '../../firebase/firestore'
+import { processRazorpayRefundFn } from '../../firebase/functions'
 import { formatDate, formatPrice } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 
@@ -24,6 +25,9 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
   const [adminNote, setAdminNote] = useState(refund.adminNote || '')
   const [saving, setSaving] = useState(null)
 
+  const isRazorpayOrder = refund.paymentMethod === 'razorpay' && refund.paymentId
+
+  // For COD/WhatsApp: just update Firestore status
   const handleAction = async (status) => {
     setSaving(status)
     try {
@@ -36,6 +40,29 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
       onClose()
     } catch {
       toast.error('Failed to update refund status')
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  // For Razorpay orders: call Firebase Function → it handles Razorpay API + Firestore atomically
+  const handleRazorpayRefund = async () => {
+    setSaving('razorpay')
+    try {
+      const result = await processRazorpayRefundFn({
+        paymentId: refund.paymentId,
+        amount: refund.orderTotal,
+        refundId: refund.id,
+        orderId: refund.orderId,
+        adminNote,
+      })
+      const { razorpayRefundId } = result.data
+      toast.success(`Refund initiated! Razorpay ID: ${razorpayRefundId}`)
+      onUpdated()
+      onClose()
+    } catch (err) {
+      const msg = err?.message || 'Failed to initiate refund via Razorpay'
+      toast.error(msg)
     } finally {
       setSaving(null)
     }
@@ -55,30 +82,34 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Status + Payment ID */}
+          {/* Status + Payment info */}
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span className="text-sm text-jewel-muted">Current status:</span>
               <RefundBadge status={refund.status} />
             </div>
-            {refund.paymentMethod === 'razorpay' && refund.paymentId ? (
+            {isRazorpayOrder ? (
               <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
                 <span className="text-blue-500 text-sm flex-shrink-0">💳</span>
                 <div className="text-xs text-blue-800 leading-relaxed">
                   <p className="font-semibold mb-0.5">Razorpay Payment ID</p>
                   <p className="font-mono select-all break-all">{refund.paymentId}</p>
-                  <p className="mt-1 text-blue-600">Use this ID in the Razorpay dashboard to issue the refund.</p>
+                  {refund.razorpayRefundId ? (
+                    <p className="mt-1 text-green-700 font-medium">Refund ID: {refund.razorpayRefundId} ({refund.razorpayRefundStatus})</p>
+                  ) : (
+                    <p className="mt-1 text-blue-600">Click "Approve & Initiate Refund" below to process this automatically.</p>
+                  )}
                 </div>
               </div>
             ) : refund.paymentMethod === 'cod' ? (
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
                 <span className="text-amber-500 text-sm">🚚</span>
-                <p className="text-xs text-amber-800">Cash on Delivery order — refund must be processed manually (bank transfer / UPI).</p>
+                <p className="text-xs text-amber-800">Cash on Delivery order — refund must be processed manually via bank transfer / UPI after approving.</p>
               </div>
             ) : refund.paymentMethod === 'whatsapp' ? (
               <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                 <span className="text-gray-500 text-sm">💬</span>
-                <p className="text-xs text-gray-700">WhatsApp order — refund must be processed manually (bank transfer / UPI).</p>
+                <p className="text-xs text-gray-700">WhatsApp order — refund must be processed manually via bank transfer / UPI after approving.</p>
               </div>
             ) : null}
           </div>
@@ -178,14 +209,25 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
                 {saving === 'rejected' ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={16} />}
                 Reject
               </button>
-              <button
-                onClick={() => handleAction('approved')}
-                disabled={!!saving}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
-              >
-                {saving === 'approved' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                Approve Refund
-              </button>
+              {isRazorpayOrder ? (
+                <button
+                  onClick={handleRazorpayRefund}
+                  disabled={!!saving}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {saving === 'razorpay' ? <Loader2 size={14} className="animate-spin" /> : <Zap size={16} />}
+                  Approve & Initiate Refund
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAction('approved')}
+                  disabled={!!saving}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {saving === 'approved' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  Approve Refund
+                </button>
+              )}
             </div>
           )}
         </div>

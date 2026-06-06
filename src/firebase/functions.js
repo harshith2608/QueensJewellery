@@ -10,3 +10,4 @@ const functions = getFunctions(app, 'asia-south1') // Mumbai region — lowest l
 
 export const createRazorpayOrderFn = httpsCallable(functions, 'createRazorpayOrder')
 export const verifyRazorpayPaymentFn = httpsCallable(functions, 'verifyRazorpayPayment')
+export const processRazorpayRefundFn = httpsCallable(functions, 'processRazorpayRefund')
