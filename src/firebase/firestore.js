@@ -79,6 +79,13 @@ export const getProducts = async ({ categoryId, featured, limit } = {}) => {
   return results
 }
 
+/** Get a single order by ID. */
+export const getOrderById = async (id) => {
+  const snap = await getDoc(doc(db, 'orders', id))
+  if (!snap.exists()) return null
+  return { id: snap.id, ...snap.data() }
+}
+
 /** Get a single product by ID. */
 export const getProductById = async (id) => {
   const snap = await getDoc(doc(db, 'products', id))

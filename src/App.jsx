@@ -20,6 +20,7 @@ const Cart = lazy(() => import('./pages/store/Cart'))
 const Checkout = lazy(() => import('./pages/store/Checkout'))
 const OrderConfirmation = lazy(() => import('./pages/store/OrderConfirmation'))
 const OrderTracking = lazy(() => import('./pages/store/OrderTracking'))
+const Invoice = lazy(() => import('./pages/store/Invoice'))
 const Search = lazy(() => import('./pages/store/Search'))
 const NotFound = lazy(() => import('./pages/store/NotFound'))
 const About = lazy(() => import('./pages/store/About'))
@@ -82,6 +83,7 @@ function AppRoutes() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/invoice/:orderId" element={<Invoice />} />
 
         {/* Store – auth handled inside Checkout */}
         <Route path="/checkout" element={<Checkout />} />

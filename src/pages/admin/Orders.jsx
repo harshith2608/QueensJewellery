@@ -5,6 +5,8 @@ import OrderStatusBadge from '../../components/admin/OrderStatusBadge'
 import { formatPrice, formatDate } from '../../utils/formatters'
 import toast from 'react-hot-toast'
 
+const STORE_URL = 'https://queensjewellery.vercel.app'
+
 const STATUS_MESSAGES = {
   pending:    (name, id) => `Hi ${name}! We have received your Queens Jewellery order #${id}. We'll confirm it shortly. 🙏`,
   confirmed:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been confirmed. We're preparing it for you! 🎉`,
@@ -146,6 +148,29 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
               </div>
             </div>
           )}
+
+          {/* Send Invoice */}
+          <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-jewel-dark">Send Invoice</p>
+              <p className="text-xs text-jewel-muted">Opens WhatsApp with invoice link for the customer</p>
+            </div>
+            <button
+              onClick={() => {
+                const phone = order.address?.phone || order.userPhone || ''
+                if (!phone) return toast.error('No customer phone number on this order')
+                const name = order.address?.fullName || order.address?.name || 'Customer'
+                const shortId = order.id.slice(-8).toUpperCase()
+                const invoiceUrl = `${STORE_URL}/invoice/${order.id}`
+                const msg = `Hi ${name}! 🧾 Here is your invoice for Queens Jewellery order #${shortId}:\n${invoiceUrl}\n\nThank you for shopping with us! 💕`
+                openWhatsApp(phone, msg)
+              }}
+              className="flex items-center gap-2 border border-[#25D366] text-[#25D366] px-3 py-2 rounded-xl text-xs font-medium hover:bg-[#25D366]/10 transition-colors flex-shrink-0"
+            >
+              <MessageCircle size={14} />
+              Send Invoice
+            </button>
+          </div>
 
           <div className="border border-gray-100 rounded-xl p-4 space-y-3">
             <h3 className="text-sm font-semibold text-jewel-dark">Update Status</h3>
