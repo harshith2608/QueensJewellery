@@ -85,3 +85,67 @@ exports.verifyRazorpayPayment = onCall(
     return { verified: true }
   }
 )
+
+/**
+ * processRazorpayRefund
+ * Admin-only. Initiates a refund via Razorpay API and updates Firestore atomically.
+ *
+ * Input:  { paymentId, amount (rupees), refundId, orderId, adminNote? }
+ * Output: { razorpayRefundId, status }
+ */
+exports.processRazorpayRefund = onCall(
+  { secrets: [RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET], region: REGION },
+  async (request) => {
+    // Admin-only: email-authenticated users only
+    if (!request.auth?.token?.email) {
+      throw new HttpsError('unauthenticated', 'Admin authentication required.')
+    }
+
+    const { paymentId, amount, refundId, orderId, adminNote = '' } = request.data
+
+    if (!paymentId || !amount || !refundId || !orderId) {
+      throw new HttpsError('invalid-argument', 'Missing required fields: paymentId, amount, refundId, orderId.')
+    }
+
+    const razorpay = getRazorpay(RAZORPAY_KEY_ID.value(), RAZORPAY_KEY_SECRET.value())
+
+    let rzRefund
+    try {
+      rzRefund = await razorpay.payments.refund(paymentId, {
+        amount: Math.round(amount * 100), // rupees → paise
+        speed: 'normal',
+        notes: { orderId, reason: adminNote || 'Refund approved by admin' },
+      })
+    } catch (err) {
+      console.error('Razorpay refund failed:', err)
+      const message = err.error?.description || err.message || 'Razorpay refund failed. Please try again.'
+      throw new HttpsError('internal', message)
+    }
+
+    // Update both refund doc and order doc atomically
+    const db = admin.firestore()
+    const batch = db.batch()
+
+    batch.update(db.collection('refunds').doc(refundId), {
+      status: 'approved',
+      adminNote: adminNote || 'Refund approved by admin',
+      razorpayRefundId: rzRefund.id,
+      razorpayRefundStatus: rzRefund.status,
+      updatedAt: new Date().toISOString(),
+    })
+
+    batch.update(db.collection('orders').doc(orderId), {
+      refunded: true,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      statusHistory: admin.firestore.FieldValue.arrayUnion({
+        status: 'refunded',
+        note: adminNote || 'Refund approved by admin',
+        timestamp: new Date().toISOString(),
+      }),
+    })
+
+    await batch.commit()
+
+    return { razorpayRefundId: rzRefund.id, status: rzRefund.status }
+  }
+)
