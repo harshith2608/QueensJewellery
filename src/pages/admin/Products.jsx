@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, X, Search, Loader2, ChevronDown, Eye, ShoppingBag, Bell, Heart, Star, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Search, Loader2, ChevronDown, ShoppingBag, Bell, Heart, Star, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import { getProducts, addProduct, updateProduct, deleteProduct, getAllCategories } from '../../firebase/firestore'
 import MediaUpload from '../../components/admin/MediaUpload'
 import { formatPrice } from '../../utils/formatters'
@@ -168,66 +168,6 @@ function ProductPagePreview({ product }) {
   )
 }
 
-// ── Preview modal ─────────────────────────────────────────────────────────────
-function PreviewModal({ form, media, categories, onClose }) {
-  const [tab, setTab] = useState('tile')
-  const product = buildPreviewProduct(form, media, categories)
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 bg-black/50 overflow-y-auto py-8">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 rounded-t-2xl">
-          <div>
-            <h2 className="text-base font-semibold text-jewel-dark">Product Preview</h2>
-            <p className="text-xs text-jewel-muted mt-0.5">Live preview based on your current inputs</p>
-          </div>
-          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100"><X size={18} /></button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 px-5 pt-4">
-          {[
-            { key: 'tile', label: 'Shop Tile', desc: 'How it appears in the product grid' },
-            { key: 'page', label: 'Product Page', desc: 'How the detail page looks' },
-          ].map(({ key, label, desc }) => (
-            <button
-              type="button"
-              key={key}
-              onClick={() => setTab(key)}
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${tab === key ? 'bg-rose-gold text-white shadow-sm' : 'bg-gray-50 text-jewel-muted hover:bg-blush/50'}`}
-            >
-              <div className="font-semibold">{label}</div>
-              <div className={`text-[11px] mt-0.5 ${tab === key ? 'text-white/80' : 'text-jewel-muted'}`}>{desc}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Preview area */}
-        <div className="p-6">
-          {tab === 'tile' ? (
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-xs text-jewel-muted text-center">This is how the card looks in the shop grid (200px wide)</p>
-              <ShopTilePreview product={product} />
-              {/* Multiple-card context hint */}
-              <div className="flex gap-3 opacity-20 pointer-events-none scale-90">
-                <ShopTilePreview product={{ ...product, name: product.name || 'Other Product' }} />
-                <ShopTilePreview product={{ ...product, name: product.name || 'Other Product' }} />
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <div className="w-full max-w-sm">
-                <p className="text-xs text-jewel-muted text-center mb-4">Simplified view of the product detail page</p>
-                <ProductPagePreview product={product} />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [] }
 
@@ -237,7 +177,7 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
     : EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [media, setMedia] = useState(initial?.media || [])
-  const [showPreview, setShowPreview] = useState(false)
+  const [previewTab, setPreviewTab] = useState('tile')
 
   const set = (f, v) => setForm((p) => ({ ...p, [f]: v }))
 
@@ -245,6 +185,8 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
     const cat = categories.find((c) => c.id === form.categoryId)
     return cat?.name?.toLowerCase().includes('bangle') ?? false
   }
+
+  const previewProduct = buildPreviewProduct(form, media, categories)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -269,115 +211,136 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-jewel-dark mb-1">Product Name *</label>
-          <input value={form.name} onChange={(e) => set('name', e.target.value)} required
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. Rose Gold Diamond Ring" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-jewel-dark mb-1">
-            Product Code <span className="text-jewel-muted font-normal">(for Instagram DMs)</span>
-          </label>
-          <input value={form.productCode} onChange={(e) => set('productCode', e.target.value.toUpperCase())}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold uppercase" placeholder="e.g. QJ001" />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-jewel-dark mb-1">Description</label>
-          <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold resize-none" placeholder="Product description" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-jewel-dark mb-1">Category *</label>
-          <select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)} required
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold bg-white">
-            <option value="">Select category</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-jewel-dark mb-1">
-            Stock <span className="text-jewel-muted font-normal">(leave blank for unlimited)</span>
-          </label>
-          <input type="number" min="0" value={form.stock ?? ''} onChange={(e) => set('stock', e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 10 — leave blank for unlimited" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-jewel-dark mb-1">Price (₹) *</label>
-          <input type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 4999" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-jewel-dark mb-1">Sale Price (₹) <span className="text-jewel-muted font-normal">optional</span></label>
-          <input type="number" min="0" value={form.salePrice} onChange={(e) => set('salePrice', e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="Leave blank if no sale" />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-jewel-dark mb-1">Tags <span className="text-jewel-muted font-normal">(comma-separated)</span></label>
-          <input value={form.tags} onChange={(e) => set('tags', e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. gold, rings, wedding" />
-        </div>
-        {isBangleCategory() && (
+    <div className="flex h-full min-h-0">
+      {/* ── Left: scrollable form ── */}
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 border-r border-gray-100 min-w-0 space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-jewel-dark mb-1">
-              Sizes <span className="text-jewel-muted font-normal">(bangle sizes: 2-2, 2-4, 2-6, 2-8, 2-10)</span>
-            </label>
-            <input value={form.sizes} onChange={(e) => set('sizes', e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 2-2, 2-4, 2-6, 2-8, 2-10" />
+            <label className="block text-sm font-medium text-jewel-dark mb-1">Product Name *</label>
+            <input value={form.name} onChange={(e) => set('name', e.target.value)} required
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. Rose Gold Diamond Ring" />
           </div>
-        )}
-        <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} className="w-4 h-4 accent-rose-gold" />
-            <span className="text-sm font-medium text-jewel-dark">Featured</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} className="w-4 h-4 accent-rose-gold" />
-            <span className="text-sm font-medium text-jewel-dark">Active</span>
-          </label>
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1">
+              Product Code <span className="text-jewel-muted font-normal">(for Instagram DMs)</span>
+            </label>
+            <input value={form.productCode} onChange={(e) => set('productCode', e.target.value.toUpperCase())}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold uppercase" placeholder="e.g. QJ001" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-jewel-dark mb-1">Description</label>
+            <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold resize-none" placeholder="Product description" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1">Category *</label>
+            <select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)} required
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold bg-white">
+              <option value="">Select category</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1">
+              Stock <span className="text-jewel-muted font-normal">(leave blank for unlimited)</span>
+            </label>
+            <input type="number" min="0" value={form.stock ?? ''} onChange={(e) => set('stock', e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 10 — leave blank for unlimited" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1">Price (₹) *</label>
+            <input type="number" min="0" value={form.price} onChange={(e) => set('price', e.target.value)} required
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 4999" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-jewel-dark mb-1">Sale Price (₹) <span className="text-jewel-muted font-normal">optional</span></label>
+            <input type="number" min="0" value={form.salePrice} onChange={(e) => set('salePrice', e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="Leave blank if no sale" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-jewel-dark mb-1">Tags <span className="text-jewel-muted font-normal">(comma-separated)</span></label>
+            <input value={form.tags} onChange={(e) => set('tags', e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. gold, rings, wedding" />
+          </div>
+          {isBangleCategory() && (
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-jewel-dark mb-1">
+                Sizes <span className="text-jewel-muted font-normal">(bangle sizes: 2-2, 2-4, 2-6, 2-8, 2-10)</span>
+              </label>
+              <input value={form.sizes} onChange={(e) => set('sizes', e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. 2-2, 2-4, 2-6, 2-8, 2-10" />
+            </div>
+          )}
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} className="w-4 h-4 accent-rose-gold" />
+              <span className="text-sm font-medium text-jewel-dark">Featured</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} className="w-4 h-4 accent-rose-gold" />
+              <span className="text-sm font-medium text-jewel-dark">Active</span>
+            </label>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-jewel-dark mb-2">Media (Images &amp; Videos)</label>
+          <MediaUpload existingMedia={media} onUpdate={setMedia} path="products" />
+        </div>
+        <div className="flex gap-3 pt-2 justify-end">
+          <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-jewel-muted hover:bg-gray-50 transition-colors">Cancel</button>
+          <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-60">
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            {saving ? 'Saving…' : 'Save Product'}
+          </button>
+        </div>
+      </form>
+
+      {/* ── Right: live preview panel (outside <form> so no submit issues) ── */}
+      <div className="w-[300px] flex-shrink-0 flex flex-col bg-gray-50/40">
+        {/* Toggle tabs — fixed at top of panel */}
+        <div className="flex gap-1.5 p-3 border-b border-gray-100 flex-shrink-0">
+          {[
+            { key: 'tile', label: 'Shop Tile' },
+            { key: 'page', label: 'Product Page' },
+          ].map(({ key, label }) => (
+            <button
+              type="button"
+              key={key}
+              onClick={() => setPreviewTab(key)}
+              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${previewTab === key ? 'bg-rose-gold text-white shadow-sm' : 'bg-white text-jewel-muted border border-gray-100 hover:border-rose-gold/40'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {/* Scrollable preview content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {previewTab === 'tile' ? (
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-[11px] text-jewel-muted text-center">How it looks in the shop grid</p>
+              <ShopTilePreview product={previewProduct} />
+            </div>
+          ) : (
+            <div>
+              <p className="text-[11px] text-jewel-muted text-center mb-3">How the product page looks</p>
+              <ProductPagePreview product={previewProduct} />
+            </div>
+          )}
         </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-jewel-dark mb-2">Media (Images &amp; Videos)</label>
-        <MediaUpload existingMedia={media} onUpdate={setMedia} path="products" />
-      </div>
-      <div className="flex gap-3 pt-2 justify-end flex-wrap">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-jewel-muted hover:bg-gray-50 transition-colors">Cancel</button>
-        <button
-          type="button"
-          onClick={() => setShowPreview(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-gold/40 text-rose-gold text-sm font-medium hover:bg-blush/50 transition-colors"
-        >
-          <Eye size={15} /> Preview
-        </button>
-        <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-60">
-          {saving && <Loader2 size={14} className="animate-spin" />}
-          {saving ? 'Saving…' : 'Save Product'}
-        </button>
-      </div>
-
-      {showPreview && (
-        <PreviewModal
-          form={form}
-          media={media}
-          categories={categories}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
-    </form>
+    </div>
   )
 }
 
 function Modal({ title, onClose, children, wide }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 bg-black/40 overflow-y-auto py-8">
-      <div className={`bg-white rounded-2xl shadow-xl w-full ${wide ? 'max-w-2xl' : 'max-w-sm'} max-h-[90vh] overflow-y-auto`}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40">
+      <div className={`bg-white rounded-2xl shadow-xl w-full flex flex-col ${wide ? 'max-w-5xl h-[92vh]' : 'max-w-sm max-h-[90vh] overflow-y-auto'}`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0 ${!wide && 'sticky top-0 bg-white z-10'}`}>
           <h2 className="text-base font-semibold text-jewel-dark">{title}</h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors"><X size={18} /></button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className={wide ? 'flex-1 overflow-hidden' : 'p-5'}>{children}</div>
       </div>
     </div>
   )
