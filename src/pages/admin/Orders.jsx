@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Eye, X, ChevronDown, Loader2, Clock, Plus, Search, Trash2, ShoppingBag, MessageCircle } from 'lucide-react'
 import { getAllOrders, updateOrderStatus, getProducts, createOrder, decrementProductStock } from '../../firebase/firestore'
+import { processRazorpayRefundFn } from '../../firebase/functions'
 import OrderStatusBadge from '../../components/admin/OrderStatusBadge'
 import { formatPrice, formatDate } from '../../utils/formatters'
 import toast from 'react-hot-toast'
@@ -14,6 +15,7 @@ const STATUS_MESSAGES = {
   shipped:    (name, id) => `Hi ${name}! Great news! Your Queens Jewellery order #${id} has been shipped and is on its way to you! 🚚 You'll receive it in 7–8 business days.`,
   delivered:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been delivered. We hope you love it! 💕 Do share a photo with us!`,
   cancelled:  (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been cancelled. Please contact us if you have any questions.`,
+  cancelledWithRefund: (name, id) => `Hi ${name}! Your Queens Jewellery order #${id} has been cancelled. A full refund has been initiated and will reflect in your account within 5–7 business days. We're sorry for the inconvenience. 🙏`,
 }
 
 function openWhatsApp(phone, message) {
@@ -37,14 +39,46 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }) {
 
   const handleUpdate = async () => {
     if (newStatus === order.status) return toast('Status unchanged')
+
+    const isCancellingRazorpayOrder =
+      newStatus === 'cancelled' &&
+      order.paymentMethod === 'razorpay' &&
+      order.paymentId &&
+      !order.refunded
+
     setSaving(true)
     try {
-      await onStatusUpdate(order.id, newStatus, note)
-      toast.success('Status updated')
+      await onStatusUpdate(order.id, newStatus, note || (isCancellingRazorpayOrder ? 'Order cancelled by admin' : ''))
       setLastNotifiedStatus(newStatus)
+
+      if (isCancellingRazorpayOrder) {
+        try {
+          await processRazorpayRefundFn({
+            paymentId: order.paymentId,
+            amount: order.total,
+            orderId: order.id,
+            adminNote: note || 'Order cancelled by admin — refund initiated',
+          })
+          toast.success('Order cancelled & refund initiated via Razorpay')
+        } catch (refundErr) {
+          toast.error(`Order cancelled, but refund failed: ${refundErr.message}`)
+        }
+        // Auto-open WhatsApp with refund message
+        if (customerPhone) {
+          openWhatsApp(customerPhone, STATUS_MESSAGES.cancelledWithRefund(customerName, shortId))
+        }
+      } else {
+        toast.success('Status updated')
+        // Auto-open WhatsApp for cancellation without refund
+        if (newStatus === 'cancelled' && customerPhone) {
+          openWhatsApp(customerPhone, STATUS_MESSAGES.cancelled(customerName, shortId))
+        }
+      }
+    } catch {
+      toast.error('Failed to update status')
+    } finally {
+      setSaving(false)
     }
-    catch { toast.error('Failed to update status') }
-    finally { setSaving(false) }
   }
 
   const handleWhatsApp = (status) => {
