@@ -177,12 +177,12 @@ function PreviewModal({ form, media, categories, onClose }) {
     <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 bg-black/50 overflow-y-auto py-8">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 rounded-t-2xl">
           <div>
             <h2 className="text-base font-semibold text-jewel-dark">Product Preview</h2>
             <p className="text-xs text-jewel-muted mt-0.5">Live preview based on your current inputs</p>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100"><X size={18} /></button>
+          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100"><X size={18} /></button>
         </div>
 
         {/* Tabs */}
@@ -192,6 +192,7 @@ function PreviewModal({ form, media, categories, onClose }) {
             { key: 'page', label: 'Product Page', desc: 'How the detail page looks' },
           ].map(({ key, label, desc }) => (
             <button
+              type="button"
               key={key}
               onClick={() => setTab(key)}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${tab === key ? 'bg-rose-gold text-white shadow-sm' : 'bg-gray-50 text-jewel-muted hover:bg-blush/50'}`}
