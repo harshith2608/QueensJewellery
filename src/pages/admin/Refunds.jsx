@@ -154,7 +154,7 @@ function RefundDetailModal({ refund, onClose, onUpdated }) {
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
                 rows={2}
-                placeholder="e.g. Refund will be processed within 5–7 business days via original payment method."
+                placeholder="e.g. Refund will be processed within 7–8 business days via original payment method."
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold resize-none"
               />
             </div>

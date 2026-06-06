@@ -209,7 +209,7 @@ export default function OrderConfirmation() {
               <div className="mt-4 flex items-start gap-2 bg-blush/40 rounded-xl p-3">
                 <Clock size={15} className="text-rose-gold mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-jewel-muted leading-relaxed">
-                  Estimated delivery: <span className="font-medium text-jewel-dark">5–7 business days</span>.
+                  Estimated delivery: <span className="font-medium text-jewel-dark">7–8 business days</span>.
                   You'll receive updates via WhatsApp.
                 </p>
               </div>
