@@ -90,6 +90,8 @@ function ImageCropModal({ file, objectUrl, queueRemaining, onConfirm, onSkip }) 
             crop={crop}
             zoom={zoom}
             aspect={aspect}
+            minZoom={0.3}
+            restrictPosition={false}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
@@ -123,11 +125,11 @@ function ImageCropModal({ file, objectUrl, queueRemaining, onConfirm, onSkip }) 
           {/* Zoom slider */}
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-jewel-muted w-10 flex-shrink-0">Zoom</span>
-            <button type="button" onClick={() => setZoom((z) => Math.max(1, +(z - 0.1).toFixed(2)))} className="p-1 text-jewel-muted hover:text-jewel-dark">
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.3, +(z - 0.1).toFixed(2)))} className="p-1 text-jewel-muted hover:text-jewel-dark">
               <ZoomOut size={16} />
             </button>
             <input
-              type="range" min={1} max={3} step={0.05}
+              type="range" min={0.3} max={3} step={0.05}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
               className="flex-1 accent-rose-gold h-1.5 rounded-full cursor-pointer"
