@@ -86,7 +86,7 @@ export default function Navbar() {
                 to="/"
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <img src={logo} alt="" className="h-12 w-auto" />
+                <img src={logo} alt="" className="h-14 w-auto" />
                 <span className="font-serif text-2xl text-rose-gold tracking-wide">Queens Jewellery</span>
               </Link>
             </div>
