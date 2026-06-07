@@ -73,14 +73,6 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             {/* Left: hamburger (mobile) + logo */}
             <div className="flex items-center gap-3">
-              <button
-                className="md:hidden p-2 rounded-lg text-jewel-muted hover:text-jewel-dark hover:bg-blush transition-colors"
-                onClick={() => setMobileMenuOpen((v) => !v)}
-                aria-label="Toggle menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-              </button>
 
               <Link
                 to="/"
@@ -178,29 +170,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile slide-down menu */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            mobileMenuOpen ? 'max-h-64 border-t border-blush' : 'max-h-0'
-          }`}
-        >
-          <div className="px-4 py-3 space-y-1 bg-ivory">
-            {navLinks.map(({ label, to, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  isActive(to)
-                    ? 'bg-blush text-rose-gold'
-                    : 'text-jewel-dark hover:bg-blush hover:text-rose-gold'
-                }`}
-              >
-                <Icon size={18} />
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
 
         {/* Mobile bottom category bar */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-ivory border-t border-blush shadow-[0_-2px_8px_rgba(44,26,29,0.08)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
