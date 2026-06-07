@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, X, Search, Loader2, ChevronDown, ShoppingBag, Bell, Heart, Star, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import { getProducts, addProduct, updateProduct, deleteProduct, getAllCategories } from '../../firebase/firestore'
+import { deleteMedia } from '../../firebase/storage'
 import MediaUpload from '../../components/admin/MediaUpload'
 import { formatPrice } from '../../utils/formatters'
 import toast from 'react-hot-toast'
@@ -392,8 +393,17 @@ export default function Products() {
   }
 
   const handleDelete = async (id) => {
-    try { await deleteProduct(id); toast.success('Product deleted'); setDeleteConfirm(null); load() }
-    catch { toast.error('Failed to delete product') }
+    try {
+      // Delete all media files from Firebase Storage first
+      const mediaToDelete = deleteConfirm?.media || []
+      await Promise.allSettled(
+        mediaToDelete.map((m) => m.url ? deleteMedia(m.url).catch(() => {}) : Promise.resolve())
+      )
+      await deleteProduct(id)
+      toast.success('Product and images deleted')
+      setDeleteConfirm(null)
+      load()
+    } catch { toast.error('Failed to delete product') }
   }
 
   const handleToggleActive = async (prod) => {
