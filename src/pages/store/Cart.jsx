@@ -12,7 +12,7 @@ import Footer from '../../components/store/Footer.jsx'
 import Button from '../../components/ui/Button.jsx'
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919999999999'
-const FREE_SHIPPING_THRESHOLD = 2000
+const FREE_SHIPPING_THRESHOLD = 3500
 const SHIPPING_FEE = 150
 
 export default function Cart() {
