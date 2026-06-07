@@ -169,7 +169,7 @@ function ProductPagePreview({ product }) {
 }
 
 
-const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [] }
+const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [], instagramUrl: '' }
 
 function ProductForm({ initial, categories, onSave, onCancel }) {
   const [form, setForm] = useState(initial
@@ -205,7 +205,7 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
         stock: form.stock !== '' && form.stock !== null ? Number(form.stock) : null,
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         sizes: form.sizes.split(',').map((s) => s.trim()).filter(Boolean),
-        featured: form.featured, active: form.active, media,
+        featured: form.featured, active: form.active, media, instagramUrl: form.instagramUrl?.trim() || null,
       })
     } finally { setSaving(false) }
   }
@@ -261,6 +261,13 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
             <label className="block text-sm font-medium text-jewel-dark mb-1">Tags <span className="text-jewel-muted font-normal">(comma-separated)</span></label>
             <input value={form.tags} onChange={(e) => set('tags', e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="e.g. gold, rings, wedding" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-jewel-dark mb-1">
+              Instagram Link <span className="text-jewel-muted font-normal">optional — paste reel or post URL</span>
+            </label>
+            <input value={form.instagramUrl || ''} onChange={(e) => set('instagramUrl', e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="https://www.instagram.com/reel/..." />
           </div>
           {isBangleCategory() && (
             <div className="sm:col-span-2">
