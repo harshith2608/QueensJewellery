@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import logo from '../../assets/logo.png'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Menu, X, Search, ShoppingBag, Home, Store, Grid3X3, PackageSearch, UserCircle2, LogOut } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext.jsx'
@@ -83,9 +84,10 @@ export default function Navbar() {
 
               <Link
                 to="/"
-                className="font-serif text-2xl text-rose-gold tracking-wide hover:opacity-80 transition-opacity"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                Queens Jewellery
+                <img src={logo} alt="" className="h-9 w-auto" />
+                <span className="font-serif text-2xl text-rose-gold tracking-wide">Queens Jewellery</span>
               </Link>
             </div>
 
