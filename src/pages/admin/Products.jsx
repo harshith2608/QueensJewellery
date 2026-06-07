@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, X, Search, Loader2, ChevronDown, ShoppingBag, Bell, Heart, Star, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
-import { getProducts, addProduct, updateProduct, deleteProduct, getAllCategories } from '../../firebase/firestore'
+import { getAllProducts, addProduct, updateProduct, deleteProduct, getAllCategories } from '../../firebase/firestore'
 import { deleteMedia } from '../../firebase/storage'
 import MediaUpload from '../../components/admin/MediaUpload'
 import { formatPrice } from '../../utils/formatters'
@@ -366,7 +366,7 @@ export default function Products() {
 
   const load = async () => {
     try {
-      const [prods, cats] = await Promise.all([getProducts(), getAllCategories()])
+      const [prods, cats] = await Promise.all([getAllProducts(), getAllCategories()])
       setProducts(prods); setCategories(cats)
     } catch { toast.error('Failed to load products') }
     finally { setLoading(false) }
