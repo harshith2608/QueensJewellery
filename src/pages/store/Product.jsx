@@ -473,7 +473,7 @@ export default function Product() {
 
               {/* Shipping note */}
               <p className="text-xs text-jewel-muted pt-2 border-t border-blush">
-                Free shipping on orders above ₹999 · Easy returns within 7 days
+                Free shipping on orders above ₹3,500 · Returns accepted only for damaged items (unboxing video required within 48 hrs)
               </p>
             </div>
           </div>
