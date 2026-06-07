@@ -12,10 +12,13 @@
   "dependencies": {
     "@headlessui/react": "^2.2.10",
     "firebase": "^12.13.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.16.0",
     "razorpay-checkout": "^1.0.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-easy-crop": "^5.5.7",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.15.1",
     "swiper": "^12.1.4"
