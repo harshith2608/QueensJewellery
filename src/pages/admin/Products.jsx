@@ -164,7 +164,7 @@ function ProductPagePreview({ product }) {
         </div>
       </div>
 
-      <p className="text-[10px] text-jewel-muted mt-3 pt-3 border-t border-blush">Free shipping on orders above ₹999 · Easy returns within 7 days</p>
+      <p className="text-[10px] text-jewel-muted mt-3 pt-3 border-t border-blush">Free shipping on orders above ₹3,500 · Returns accepted only for damaged items (unboxing video required within 48 hrs)</p>
     </div>
   )
 }
