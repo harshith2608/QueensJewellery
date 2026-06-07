@@ -37,7 +37,7 @@ function ShopTilePreview({ product }) {
 
   return (
     <div className="relative bg-ivory rounded-2xl overflow-hidden w-[200px] shadow-lg flex-shrink-0">
-      <div className="relative aspect-square overflow-hidden bg-blush">
+      <div className="relative aspect-[3/4] overflow-hidden bg-blush">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         ) : (
@@ -82,7 +82,7 @@ function ProductPagePreview({ product }) {
   return (
     <div className="bg-ivory rounded-xl overflow-hidden text-sm max-w-sm w-full">
       {/* Image */}
-      <div className="aspect-square bg-blush overflow-hidden rounded-xl mb-4">
+      <div className="aspect-[3/4] bg-blush overflow-hidden rounded-xl mb-4">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         ) : (
