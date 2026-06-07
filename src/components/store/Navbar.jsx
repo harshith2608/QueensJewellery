@@ -70,7 +70,7 @@ export default function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16">
             {/* Left: hamburger (mobile) + logo */}
             <div className="flex items-center gap-3">
               <button
@@ -86,7 +86,7 @@ export default function Navbar() {
                 to="/"
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <img src={logo} alt="" className="h-14 w-auto" />
+                <img src={logo} alt="" className="h-20 w-auto" />
                 <span className="font-serif text-2xl text-rose-gold tracking-wide">Queens Jewellery</span>
               </Link>
             </div>
