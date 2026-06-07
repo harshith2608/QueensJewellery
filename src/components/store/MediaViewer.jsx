@@ -24,13 +24,13 @@ export default function MediaViewer({ media = [] }) {
 
   return (
     <div className="space-y-3">
-      {/* Main media display */}
-      <div className="relative aspect-square rounded-2xl overflow-hidden bg-blush">
+      {/* Main media display — adapts to the image's natural aspect ratio */}
+      <div className="relative rounded-2xl overflow-hidden bg-white flex items-center justify-center">
         {active.type === 'video' ? (
           <video
             key={active.url}
             controls
-            className="w-full h-full object-cover"
+            className="w-full max-h-[70vh] object-contain"
             playsInline
             preload="metadata"
           >
@@ -60,7 +60,7 @@ export default function MediaViewer({ media = [] }) {
               key={active.url}
               src={active.url || PLACEHOLDER}
               alt="Product"
-              className={`w-full h-full object-cover transition-transform duration-300 ${
+              className={`w-full max-h-[70vh] object-contain transition-transform duration-300 ${
                 zoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'
               }`}
               onClick={() => setZoomed((z) => !z)}
