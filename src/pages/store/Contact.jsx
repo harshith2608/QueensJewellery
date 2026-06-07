@@ -41,7 +41,7 @@ export default function Contact() {
 
         {/* Email */}
         <a
-          href="mailto:polarani1978@gmail.com"
+          href="mailto:support@queensjewellery.co.in"
           className="flex items-start gap-4 bg-white border border-blush/50 rounded-2xl p-4 hover:border-rose-gold transition-colors shadow-sm"
         >
           <div className="w-10 h-10 rounded-full bg-blush flex items-center justify-center flex-shrink-0">
@@ -49,7 +49,7 @@ export default function Contact() {
           </div>
           <div>
             <p className="font-medium text-jewel-dark text-sm">Email</p>
-            <p className="text-jewel-muted text-xs mt-0.5">polarani1978@gmail.com</p>
+            <p className="text-jewel-muted text-xs mt-0.5">support@queensjewellery.co.in</p>
             <p className="text-xs text-jewel-muted mt-1">We reply within 24 hours</p>
           </div>
         </a>
