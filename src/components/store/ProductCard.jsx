@@ -50,12 +50,12 @@ export default function ProductCard({ product }) {
       className="group relative bg-ivory rounded-2xl overflow-hidden block hover:shadow-xl transition-shadow duration-300"
       aria-label={name}
     >
-      {/* Image container — square frame, image fits fully inside without cropping */}
-      <div className="relative aspect-square overflow-hidden bg-white">
+      {/* Image container — 3:4 portrait ratio, uniform tiles */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-blush">
         <img
           src={imageUrl}
           alt={name}
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
           onError={(e) => { e.currentTarget.src = PLACEHOLDER_URL }}
         />
