@@ -79,6 +79,14 @@ export const getProducts = async ({ categoryId, featured, limit } = {}) => {
   return results
 }
 
+/** Get ALL products including inactive ones — admin use only. */
+export const getAllProducts = async () => {
+  const snap = await getDocs(productsRef)
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+}
+
 /** Get a single order by ID. */
 export const getOrderById = async (id) => {
   const snap = await getDoc(doc(db, 'orders', id))
