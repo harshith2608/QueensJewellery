@@ -46,7 +46,7 @@ const ASPECTS = [
 function ImageCropModal({ file, objectUrl, queueRemaining, onConfirm, onSkip }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
-  const [aspect, setAspect] = useState(1) // default 1:1 (square — matches shop tile)
+  const [aspect, setAspect] = useState(3 / 4) // default 3:4 portrait — matches shop tile
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
   const [processing, setProcessing] = useState(false)
 
