@@ -247,6 +247,16 @@ export default function Checkout() {
               decrementProductStock(id, quantity).catch(console.error)
             )
 
+            // Meta Pixel — Purchase event (Razorpay)
+            if (typeof window.fbq === 'function') {
+              window.fbq('track', 'Purchase', {
+                value: finalTotal,
+                currency: 'INR',
+                content_type: 'product',
+                content_ids: orderBase.items.map((i) => i.id),
+                contents: orderBase.items.map((i) => ({ id: i.id, quantity: i.quantity || 1 })),
+              })
+            }
             clearCart()
             navigate(`/order-confirmation?orderId=${orderRef.id}`, { replace: true })
             resolve()
@@ -287,6 +297,16 @@ export default function Checkout() {
       decrementProductStock(id, quantity).catch(console.error)
     )
 
+    // Meta Pixel — Purchase event (COD)
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'Purchase', {
+        value: finalTotal,
+        currency: 'INR',
+        content_type: 'product',
+        content_ids: orderBase.items.map((i) => i.id),
+        contents: orderBase.items.map((i) => ({ id: i.id, quantity: i.quantity || 1 })),
+      })
+    }
     clearCart()
     navigate(`/order-confirmation?orderId=${orderRef.id}`, { replace: true })
     setPlacing(false)
@@ -319,6 +339,16 @@ export default function Checkout() {
       appliedCoupon ? { code: appliedCoupon.code, discount: discountAmount } : null
     )
     openWhatsApp(WHATSAPP_NUMBER, msg)
+    // Meta Pixel — Purchase event (WhatsApp)
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'Purchase', {
+        value: finalTotal,
+        currency: 'INR',
+        content_type: 'product',
+        content_ids: orderBase.items.map((i) => i.id),
+        contents: orderBase.items.map((i) => ({ id: i.id, quantity: i.quantity || 1 })),
+      })
+    }
     clearCart()
     navigate(`/order-confirmation?orderId=${orderRef.id}`, { replace: true })
     setPlacing(false)
