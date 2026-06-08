@@ -130,6 +130,15 @@ export default function Checkout() {
       return
     }
 
+    // Meta Pixel — InitiateCheckout event
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'InitiateCheckout', {
+        value: finalTotal,
+        currency: 'INR',
+        num_items: cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0),
+      })
+    }
+
     setPlacing(true)
 
     // Optionally save address to user profile
