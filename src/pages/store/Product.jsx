@@ -206,6 +206,16 @@ export default function Product() {
     }
     setSizeError(false)
     for (let i = 0; i < quantity; i++) addToCart({ ...product, selectedSize: selectedSize || null })
+    // Meta Pixel — AddToCart event
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'AddToCart', {
+        content_ids: [product.id],
+        content_name: product.name,
+        content_type: 'product',
+        value: effectivePrice,
+        currency: 'INR',
+      })
+    }
     setAddedFeedback(true)
     setTimeout(() => setAddedFeedback(false), 2000)
   }
