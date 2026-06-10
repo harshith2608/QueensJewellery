@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Trash2, ChevronUp, ChevronDown, Loader2, Save } from 'lucide-react'
 import { getSettings, updateSettings } from '../../firebase/firestore'
+import { Eye, EyeOff } from 'lucide-react'
 import MediaUpload from '../../components/admin/MediaUpload'
 import toast from 'react-hot-toast'
 
@@ -13,6 +14,8 @@ export default function Settings() {
   const [banners, setBanners] = useState([])
   const [globalOffer, setGlobalOffer] = useState(EMPTY_OFFER)
   const [promoBanner, setPromoBanner] = useState(EMPTY_PROMO)
+  const [comingSoon, setComingSoon] = useState(false)
+  const [comingSoonSaving, setComingSoonSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -25,11 +28,22 @@ export default function Settings() {
         setBanners(data.banners || [])
         setGlobalOffer(data.globalOffer || EMPTY_OFFER)
         setPromoBanner(data.promoBanner || EMPTY_PROMO)
+        setComingSoon(data.comingSoon || false)
       } catch { toast.error('Failed to load settings') }
       finally { setLoading(false) }
     }
     load()
   }, [])
+
+  const handleComingSoonToggle = async (val) => {
+    setComingSoonSaving(true)
+    try {
+      await updateSettings({ comingSoon: val })
+      setComingSoon(val)
+      toast.success(val ? 'Coming Soon mode ON' : 'Store is now LIVE')
+    } catch { toast.error('Failed to update') }
+    finally { setComingSoonSaving(false) }
+  }
 
   const setOffer = (field, value) => setGlobalOffer((p) => ({ ...p, [field]: value }))
   const setPromo = (field, value) => setPromoBanner((p) => ({ ...p, [field]: value }))
@@ -87,6 +101,34 @@ export default function Settings() {
           className="flex items-center gap-2 bg-rose-gold text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-rose-gold/90 transition-colors shadow-sm disabled:opacity-60">
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
           {saving ? 'Saving…' : 'Save Settings'}
+        </button>
+      </div>
+
+      {/* Coming Soon toggle */}
+      <div className={`rounded-2xl border shadow-sm p-5 flex items-center justify-between gap-4 ${comingSoon ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+        <div>
+          <h2 className="text-base font-semibold text-jewel-dark">
+            {comingSoon ? '🔒 Coming Soon Mode — Store is Hidden' : '🟢 Store is Live'}
+          </h2>
+          <p className="text-xs text-jewel-muted mt-0.5">
+            {comingSoon
+              ? 'Visitors see the Coming Soon page. Admin panel works normally.'
+              : 'Visitors can browse and shop normally.'}
+          </p>
+        </div>
+        <button
+          onClick={() => handleComingSoonToggle(!comingSoon)}
+          disabled={comingSoonSaving}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+            comingSoon
+              ? 'bg-green-500 hover:bg-green-600 text-white'
+              : 'bg-amber-500 hover:bg-amber-600 text-white'
+          } disabled:opacity-60`}
+        >
+          {comingSoonSaving
+            ? <Loader2 size={15} className="animate-spin" />
+            : comingSoon ? <Eye size={15} /> : <EyeOff size={15} />}
+          {comingSoon ? 'Go Live' : 'Enable Coming Soon'}
         </button>
       </div>
 

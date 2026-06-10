@@ -1,10 +1,11 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext'
 import { CartProvider } from './contexts/CartContext'
 import { TestModeProvider } from './contexts/TestModeContext'
+import { SettingsProvider, useSettings } from './contexts/SettingsContext'
 import TestModeBanner from './components/store/TestModeBanner'
 import Toast from './components/ui/Toast'
 import Spinner from './components/ui/Spinner'
@@ -23,6 +24,7 @@ const OrderTracking = lazy(() => import('./pages/store/OrderTracking'))
 const Invoice = lazy(() => import('./pages/store/Invoice'))
 const Search = lazy(() => import('./pages/store/Search'))
 const NotFound = lazy(() => import('./pages/store/NotFound'))
+const ComingSoon = lazy(() => import('./pages/store/ComingSoon'))
 const About = lazy(() => import('./pages/store/About'))
 const Contact = lazy(() => import('./pages/store/Contact'))
 const RefundPolicy = lazy(() => import('./pages/store/RefundPolicy'))
@@ -52,6 +54,18 @@ function PageLoader() {
   )
 }
 
+// ─── Coming Soon guard — blocks store routes when comingSoon is enabled ───────
+function ComingSoonGuard({ children }) {
+  const { comingSoon, loading } = useSettings()
+  const location = useLocation()
+
+  if (loading) return <PageLoader />
+  if (comingSoon && !location.pathname.startsWith('/admin')) {
+    return <Navigate to="/coming-soon" replace />
+  }
+  return children
+}
+
 // ─── Protected route for customers ───────────────────────────────────────────
 function CustomerProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -75,14 +89,17 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Store – public */}
-        <Route path="/" element={<Home />} />
-        <Route path="/shop" element={<Shop />} />
-        <Route path="/category/:slug" element={<Category />} />
-        <Route path="/product/:id" element={<Product />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/search" element={<Search />} />
+        {/* Coming Soon — always accessible */}
+        <Route path="/coming-soon" element={<ComingSoon />} />
+
+        {/* Store – public (blocked when comingSoon is on) */}
+        <Route path="/" element={<ComingSoonGuard><Home /></ComingSoonGuard>} />
+        <Route path="/shop" element={<ComingSoonGuard><Shop /></ComingSoonGuard>} />
+        <Route path="/category/:slug" element={<ComingSoonGuard><Category /></ComingSoonGuard>} />
+        <Route path="/product/:id" element={<ComingSoonGuard><Product /></ComingSoonGuard>} />
+        <Route path="/categories" element={<ComingSoonGuard><Categories /></ComingSoonGuard>} />
+        <Route path="/cart" element={<ComingSoonGuard><Cart /></ComingSoonGuard>} />
+        <Route path="/search" element={<ComingSoonGuard><Search /></ComingSoonGuard>} />
         <Route path="/invoice/:orderId" element={<Invoice />} />
 
         {/* Store – auth handled inside Checkout */}
@@ -151,10 +168,12 @@ export default function App() {
         <AdminAuthProvider>
           <CartProvider>
             <TestModeProvider>
-              <ScrollToTop />
-              <Toast />
-              <TestModeBanner />
-              <AppRoutes />
+              <SettingsProvider>
+                <ScrollToTop />
+                <Toast />
+                <TestModeBanner />
+                <AppRoutes />
+              </SettingsProvider>
             </TestModeProvider>
           </CartProvider>
         </AdminAuthProvider>
