@@ -146,6 +146,7 @@ export default function Checkout() {
       try {
         await updateUser(user.uid, {
           addresses: [...savedAddresses, address],
+          ...(address.fullName?.trim() ? { name: address.fullName.trim() } : {}),
         })
       } catch (err) {
         console.error('Failed to save address:', err)
