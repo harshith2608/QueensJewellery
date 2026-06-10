@@ -142,10 +142,10 @@ export default function Checkout() {
     setPlacing(true)
 
     // Optionally save address to user profile
-    if (showNewForm && saveAddress && user) {
+    if (showNewForm && user) {
       try {
         await updateUser(user.uid, {
-          addresses: [...savedAddresses, address],
+          ...(saveAddress ? { addresses: [...savedAddresses, address] } : {}),
           ...(address.fullName?.trim() ? { name: address.fullName.trim() } : {}),
         })
       } catch (err) {
