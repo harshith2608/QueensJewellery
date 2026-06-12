@@ -178,7 +178,19 @@ export default function Product() {
       .then((data) => {
         if (!cancelled) {
           if (!data) setNotFound(true)
-          else setProduct(data)
+          else {
+            setProduct(data)
+            // Meta Pixel — ViewContent event
+            if (typeof window.fbq === 'function') {
+              window.fbq('track', 'ViewContent', {
+                content_ids: [data.id],
+                content_name: data.name,
+                content_type: 'product',
+                value: data.salePrice || data.price,
+                currency: 'INR',
+              })
+            }
+          }
         }
       })
       .catch(() => { if (!cancelled) setNotFound(true) })
