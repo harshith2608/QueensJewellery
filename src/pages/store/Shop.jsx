@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal } from 'lucide-react'
 
@@ -56,8 +56,16 @@ export default function Shop() {
     setSearchParams(params)
   }, [setSearchParams])
 
+  const PAGE_SIZE = 24
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
   const { products: rawProducts, loading } = useProducts()
   const { categories } = useCategories()
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [filters.category, filters.priceMin, filters.priceMax, filters.sort])
 
   // Client-side filtering + sorting
   const products = useMemo(() => {
@@ -81,6 +89,9 @@ export default function Shop() {
     return sortProducts(result, filters.sort)
   }, [rawProducts, filters.category, filters.priceMin, filters.priceMax, filters.sort])
 
+  const visibleProducts = products.slice(0, visibleCount)
+  const hasMore = visibleCount < products.length
+
   const currentCategoryName = filters.category
     ? categories.find((c) => c.id === filters.category)?.name
     : null
@@ -98,7 +109,9 @@ export default function Shop() {
             </h1>
             {!loading && (
               <p className="text-jewel-muted text-sm mt-1">
-                {products.length} {products.length === 1 ? 'product' : 'products'} found
+                {hasMore
+                  ? `Showing ${visibleProducts.length} of ${products.length} products`
+                  : `${products.length} ${products.length === 1 ? 'product' : 'products'} found`}
               </p>
             )}
           </div>
@@ -129,9 +142,11 @@ export default function Shop() {
             {/* Product grid */}
             <div className="flex-1 min-w-0">
               <ProductGrid
-                products={products}
+                products={visibleProducts}
                 loading={loading}
                 emptyMessage="Try adjusting your filters or browse our full collection."
+                hasMore={hasMore}
+                onLoadMore={() => setVisibleCount((c) => c + PAGE_SIZE)}
               />
             </div>
           </div>

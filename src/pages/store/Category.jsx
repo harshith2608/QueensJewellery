@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { ChevronRight, SlidersHorizontal } from 'lucide-react'
 
@@ -27,10 +27,13 @@ function sortProducts(products, sort) {
   }
 }
 
+const PAGE_SIZE = 24
+
 export default function Category() {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const { categories, loading: catLoading } = useCategories()
   const category = categories.find((c) => c.slug === slug)
@@ -65,6 +68,14 @@ export default function Category() {
     if (!isNaN(max)) result = result.filter((p) => (p.salePrice ?? p.price) <= max)
     return sortProducts(result, filters.sort)
   }, [rawProducts, filters.priceMin, filters.priceMax, filters.sort])
+
+  // Reset visible count when slug or filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [slug, filters.priceMin, filters.priceMax, filters.sort])
+
+  const visibleProducts = products.slice(0, visibleCount)
+  const hasMore = visibleCount < products.length
 
   // Loading state while categories are being fetched
   if (catLoading) {
@@ -141,7 +152,9 @@ export default function Category() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             {!productsLoading && (
               <p className="text-jewel-muted text-sm">
-                {products.length} {products.length === 1 ? 'product' : 'products'}
+                {hasMore
+                  ? `Showing ${visibleProducts.length} of ${products.length} products`
+                  : `${products.length} ${products.length === 1 ? 'product' : 'products'}`}
               </p>
             )}
             {/* Mobile filter button */}
@@ -182,9 +195,11 @@ export default function Category() {
                 </div>
               ) : (
                 <ProductGrid
-                  products={products}
+                  products={visibleProducts}
                   loading={productsLoading}
                   emptyMessage={`No products in ${category.name} yet. Check back soon!`}
+                  hasMore={hasMore}
+                  onLoadMore={() => setVisibleCount((c) => c + PAGE_SIZE)}
                 />
               )}
             </div>
