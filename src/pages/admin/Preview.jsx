@@ -1,17 +1,31 @@
 import { useEffect, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 
-const DEVICES = [
-  { label: 'iPhone SE', width: 375, height: 667 },
-  { label: 'iPhone 14', width: 390, height: 844 },
-  { label: 'iPhone 14 Plus', width: 430, height: 932 },
+const DEVICE_GROUPS = [
+  {
+    os: 'iOS',
+    devices: [
+      { label: 'iPhone SE', width: 375, height: 667 },
+      { label: 'iPhone 14', width: 390, height: 844 },
+      { label: 'iPhone 14 Plus', width: 430, height: 932 },
+    ],
+  },
+  {
+    os: 'Android',
+    devices: [
+      { label: 'Galaxy S23', width: 360, height: 780 },
+      { label: 'Galaxy S23 Ultra', width: 384, height: 824 },
+      { label: 'Pixel 7', width: 412, height: 915 },
+    ],
+  },
 ]
 
+const ALL_DEVICES = DEVICE_GROUPS.flatMap((g) => g.devices)
+
 export default function Preview() {
-  const [device, setDevice] = useState(DEVICES[1])
+  const [device, setDevice] = useState(ALL_DEVICES[1])
   const [iframeKey, setIframeKey] = useState(0)
 
-  // Set the admin preview flag so ComingSoonGuard lets the store through
   useEffect(() => {
     localStorage.setItem('adminPreview', 'true')
     return () => localStorage.removeItem('adminPreview')
@@ -19,19 +33,24 @@ export default function Preview() {
 
   return (
     <div className="flex flex-col items-center gap-5 py-2">
-      <div className="flex items-center gap-2 flex-wrap justify-center">
-        {DEVICES.map((d) => (
-          <button
-            key={d.label}
-            onClick={() => { setDevice(d); setIframeKey((k) => k + 1) }}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              device.label === d.label
-                ? 'border-rose-gold bg-rose-gold text-white'
-                : 'border-blush text-jewel-muted hover:border-rose-gold hover:text-rose-gold'
-            }`}
-          >
-            {d.label} <span className="opacity-60">{d.width}px</span>
-          </button>
+      <div className="flex flex-col items-center gap-3">
+        {DEVICE_GROUPS.map((group) => (
+          <div key={group.os} className="flex items-center gap-2 flex-wrap justify-center">
+            <span className="text-xs font-semibold text-jewel-muted w-14 text-right">{group.os}</span>
+            {group.devices.map((d) => (
+              <button
+                key={d.label}
+                onClick={() => { setDevice(d); setIframeKey((k) => k + 1) }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  device.label === d.label
+                    ? 'border-rose-gold bg-rose-gold text-white'
+                    : 'border-blush text-jewel-muted hover:border-rose-gold hover:text-rose-gold'
+                }`}
+              >
+                {d.label} <span className="opacity-60">{d.width}px</span>
+              </button>
+            ))}
+          </div>
         ))}
         <button
           onClick={() => setIframeKey((k) => k + 1)}
