@@ -62,7 +62,7 @@ function HeroBanner({ banners }) {
     )
   }
 
-  // Multiple banners with Swiper
+  // Pure image carousel — no text overlay
   return (
     <section className="relative h-[60vh] min-h-[360px] max-h-[640px] overflow-hidden">
       <Swiper
@@ -74,42 +74,11 @@ function HeroBanner({ banners }) {
       >
         {banners.map((banner, idx) => (
           <SwiperSlide key={idx}>
-            <div className="relative h-full w-full">
-              {banner.image ? (
-                <img
-                  src={banner.image}
-                  alt={banner.title || 'Banner'}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-ivory via-blush to-rose-gold/30" />
-              )}
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-jewel-dark/30" />
-              <div className="absolute inset-0 flex items-center">
-                <div className="max-w-7xl mx-auto px-6 sm:px-10 w-full">
-                  {banner.subtitle && (
-                    <p className="text-ivory/80 text-sm font-medium tracking-widest uppercase mb-3">
-                      {banner.subtitle}
-                    </p>
-                  )}
-                  <h2 className="font-serif text-4xl sm:text-6xl text-ivory leading-tight mb-4 drop-shadow">
-                    {banner.title || 'Queens Jewellery'}
-                  </h2>
-                  {banner.description && (
-                    <p className="text-ivory/80 text-base mb-6 max-w-md">
-                      {banner.description}
-                    </p>
-                  )}
-                  <Link
-                    to={banner.link || '/shop'}
-                    className="inline-block bg-rose-gold text-white px-8 py-3 rounded-full font-medium hover:bg-jewel-dark transition-colors shadow-lg"
-                  >
-                    {banner.cta || 'Shop Now'}
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <img
+              src={banner.image}
+              alt={banner.alt || 'Queens Jewellery'}
+              className="w-full h-full object-cover"
+            />
           </SwiperSlide>
         ))}
       </Swiper>
