@@ -5,17 +5,17 @@ const DEVICE_GROUPS = [
   {
     os: 'iOS',
     devices: [
-      { label: 'iPhone SE', width: 375, height: 667 },
-      { label: 'iPhone 14', width: 390, height: 844 },
-      { label: 'iPhone 14 Plus', width: 430, height: 932 },
+      { label: 'iPhone SE', width: 375, height: 520 },
+      { label: 'iPhone 14', width: 390, height: 600 },
+      { label: 'iPhone 14 Plus', width: 430, height: 640 },
     ],
   },
   {
     os: 'Android',
     devices: [
-      { label: 'Galaxy S23', width: 360, height: 780 },
-      { label: 'Galaxy S23 Ultra', width: 384, height: 824 },
-      { label: 'Pixel 7', width: 412, height: 915 },
+      { label: 'Galaxy S23', width: 360, height: 560 },
+      { label: 'Galaxy S23 Ultra', width: 384, height: 580 },
+      { label: 'Pixel 7', width: 412, height: 600 },
     ],
   },
 ]
