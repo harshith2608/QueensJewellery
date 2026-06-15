@@ -74,11 +74,21 @@ function HeroBanner({ banners }) {
       >
         {banners.map((banner, idx) => (
           <SwiperSlide key={idx}>
-            <img
-              src={banner.image}
-              alt={banner.alt || 'Queens Jewellery'}
-              className="w-full h-full object-cover"
-            />
+            {banner.link ? (
+              <Link to={banner.link} className="block w-full h-full">
+                <img
+                  src={banner.image}
+                  alt={banner.alt || 'Queens Jewellery'}
+                  className="w-full h-full object-cover"
+                />
+              </Link>
+            ) : (
+              <img
+                src={banner.image}
+                alt={banner.alt || 'Queens Jewellery'}
+                className="w-full h-full object-cover"
+              />
+            )}
           </SwiperSlide>
         ))}
       </Swiper>

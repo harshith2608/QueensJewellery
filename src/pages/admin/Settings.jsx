@@ -251,9 +251,12 @@ export default function Settings() {
             {banners.map((banner, i) => (
               <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                 <img src={banner.url} alt={banner.alt || `Banner ${i + 1}`} className="w-20 h-12 rounded-lg object-cover flex-shrink-0" />
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                   <input value={banner.alt || ''} onChange={(e) => { const u = [...banners]; u[i] = { ...u[i], alt: e.target.value }; setBanners(u) }}
                     placeholder="Alt text (optional)"
+                    className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-gold/30 focus:border-rose-gold bg-white" />
+                  <input value={banner.link || ''} onChange={(e) => { const u = [...banners]; u[i] = { ...u[i], link: e.target.value }; setBanners(u) }}
+                    placeholder="Product link e.g. /product/abc123 (optional)"
                     className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-gold/30 focus:border-rose-gold bg-white" />
                 </div>
                 <div className="flex flex-col gap-1">
