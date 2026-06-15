@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 
+const SCALE = 0.72
+
 const DEVICE_GROUPS = [
   {
     os: 'iOS',
     devices: [
-      { label: 'iPhone SE', width: 375, height: 520 },
-      { label: 'iPhone 14', width: 390, height: 600 },
-      { label: 'iPhone 14 Plus', width: 430, height: 640 },
+      { label: 'iPhone SE', width: 375, height: 667 },
+      { label: 'iPhone 14', width: 390, height: 844 },
+      { label: 'iPhone 14 Plus', width: 430, height: 932 },
     ],
   },
   {
     os: 'Android',
     devices: [
-      { label: 'Galaxy S23', width: 360, height: 560 },
-      { label: 'Galaxy S23 Ultra', width: 384, height: 580 },
-      { label: 'Pixel 7', width: 412, height: 600 },
+      { label: 'Galaxy S23', width: 360, height: 780 },
+      { label: 'Galaxy S23 Ultra', width: 384, height: 824 },
+      { label: 'Pixel 7', width: 412, height: 915 },
     ],
   },
 ]
@@ -62,30 +64,43 @@ export default function Preview() {
         </button>
       </div>
 
-      {/* Phone frame — actual size, page scrolls to show full phone */}
-      <div
-        className="relative bg-gray-900 rounded-[3rem] shadow-2xl"
-        style={{ width: device.width + 28, padding: '18px 14px', border: '6px solid #1f2937' }}
-      >
-        {/* Notch */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-gray-900 rounded-b-2xl z-10" />
-
-        {/* Screen */}
+      {/* Wrapper reserves the scaled space so layout doesn't jump */}
+      <div style={{
+        width: (device.width + 28) * SCALE,
+        height: (device.height + 80) * SCALE,
+        flexShrink: 0,
+      }}>
+        {/* Phone frame at true proportions, scaled down uniformly */}
         <div
-          className="overflow-hidden rounded-[2.2rem] bg-white"
-          style={{ width: device.width, height: device.height }}
+          className="relative bg-gray-900 rounded-[3rem] shadow-2xl"
+          style={{
+            width: device.width + 28,
+            padding: '18px 14px',
+            border: '6px solid #1f2937',
+            transform: `scale(${SCALE})`,
+            transformOrigin: 'top left',
+          }}
         >
-          <iframe
-            key={iframeKey}
-            src="/"
-            style={{ width: device.width, height: device.height, border: 'none', display: 'block' }}
-            title="Store Preview"
-          />
-        </div>
+          {/* Notch */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-gray-900 rounded-b-2xl z-10" />
 
-        {/* Home indicator */}
-        <div className="flex justify-center mt-3">
-          <div className="w-24 h-1 bg-gray-600 rounded-full" />
+          {/* Screen */}
+          <div
+            className="overflow-hidden rounded-[2.2rem] bg-white"
+            style={{ width: device.width, height: device.height }}
+          >
+            <iframe
+              key={iframeKey}
+              src="/"
+              style={{ width: device.width, height: device.height, border: 'none', display: 'block' }}
+              title="Store Preview"
+            />
+          </div>
+
+          {/* Home indicator */}
+          <div className="flex justify-center mt-3">
+            <div className="w-24 h-1 bg-gray-600 rounded-full" />
+          </div>
         </div>
       </div>
 
