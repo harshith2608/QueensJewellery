@@ -258,7 +258,7 @@ export default function Home() {
   }, [])
 
   const announcementText = settings?.announcementBar || ''
-  const heroBanners = settings?.heroBanners || []
+  const heroBanners = (settings?.banners || []).map((b) => ({ ...b, image: b.url }))
 
   return (
     <div className="min-h-screen flex flex-col bg-ivory">
