@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 
 const DEVICE_GROUPS = [
@@ -22,35 +22,19 @@ const DEVICE_GROUPS = [
 
 const ALL_DEVICES = DEVICE_GROUPS.flatMap((g) => g.devices)
 
-const FRAME_PADDING = { x: 28, y: 80 } // phone chrome around the screen
-
 export default function Preview() {
   const [device, setDevice] = useState(ALL_DEVICES[1])
   const [iframeKey, setIframeKey] = useState(0)
-  const [scale, setScale] = useState(1)
-  const selectorRef = useRef(null)
 
   useEffect(() => {
     localStorage.setItem('adminPreview', 'true')
     return () => localStorage.removeItem('adminPreview')
   }, [])
 
-  // Recalculate scale whenever device or window size changes
-  useEffect(() => {
-    const calculate = () => {
-      const selectorH = selectorRef.current?.offsetHeight ?? 140
-      const availableH = window.innerHeight - selectorH - 80 // 80 = admin padding + footer text
-      const phoneH = device.height + FRAME_PADDING.y
-      setScale(Math.min(1, availableH / phoneH))
-    }
-    calculate()
-    window.addEventListener('resize', calculate)
-    return () => window.removeEventListener('resize', calculate)
-  }, [device.height])
-
   return (
     <div className="flex flex-col items-center gap-5 py-2">
-      <div ref={selectorRef} className="flex flex-col items-center gap-3">
+      {/* Device selector */}
+      <div className="flex flex-col items-center gap-3">
         {DEVICE_GROUPS.map((group) => (
           <div key={group.os} className="flex items-center gap-2 flex-wrap justify-center">
             <span className="text-xs font-semibold text-jewel-muted w-14 text-right">{group.os}</span>
@@ -78,43 +62,30 @@ export default function Preview() {
         </button>
       </div>
 
-      {/* Wrapper takes the scaled dimensions so layout doesn't overflow */}
-      <div style={{
-        width: (device.width + FRAME_PADDING.x) * scale,
-        height: (device.height + FRAME_PADDING.y) * scale,
-        flexShrink: 0,
-      }}>
-        {/* Phone frame — scaled down to fit viewport */}
+      {/* Phone frame — actual size, page scrolls to show full phone */}
+      <div
+        className="relative bg-gray-900 rounded-[3rem] shadow-2xl"
+        style={{ width: device.width + 28, padding: '18px 14px', border: '6px solid #1f2937' }}
+      >
+        {/* Notch */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-gray-900 rounded-b-2xl z-10" />
+
+        {/* Screen */}
         <div
-          className="relative bg-gray-900 rounded-[3rem] shadow-2xl"
-          style={{
-            width: device.width + FRAME_PADDING.x,
-            padding: '18px 14px',
-            border: '6px solid #1f2937',
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-          }}
+          className="overflow-hidden rounded-[2.2rem] bg-white"
+          style={{ width: device.width, height: device.height }}
         >
-          {/* Notch */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-gray-900 rounded-b-2xl z-10" />
+          <iframe
+            key={iframeKey}
+            src="/"
+            style={{ width: device.width, height: device.height, border: 'none', display: 'block' }}
+            title="Store Preview"
+          />
+        </div>
 
-          {/* Screen */}
-          <div
-            className="overflow-hidden rounded-[2.2rem] bg-white"
-            style={{ width: device.width, height: device.height }}
-          >
-            <iframe
-              key={iframeKey}
-              src="/"
-              style={{ width: device.width, height: device.height, border: 'none', display: 'block' }}
-              title="Store Preview"
-            />
-          </div>
-
-          {/* Home indicator */}
-          <div className="flex justify-center mt-3">
-            <div className="w-24 h-1 bg-gray-600 rounded-full" />
-          </div>
+        {/* Home indicator */}
+        <div className="flex justify-center mt-3">
+          <div className="w-24 h-1 bg-gray-600 rounded-full" />
         </div>
       </div>
 
