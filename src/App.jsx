@@ -44,6 +44,7 @@ const AdminReviews = lazy(() => import('./pages/admin/Reviews'))
 const AdminSettings = lazy(() => import('./pages/admin/Settings'))
 const AdminNotifyRequests = lazy(() => import('./pages/admin/NotifyRequests'))
 const AdminRefunds = lazy(() => import('./pages/admin/Refunds'))
+const AdminPreview = lazy(() => import('./pages/admin/Preview'))
 
 // ─── Fallback ─────────────────────────────────────────────────────────────────
 function PageLoader() {
@@ -58,9 +59,10 @@ function PageLoader() {
 function ComingSoonGuard({ children }) {
   const { comingSoon, loading } = useSettings()
   const location = useLocation()
+  const isAdminPreview = localStorage.getItem('adminPreview') === 'true'
 
   if (loading) return <PageLoader />
-  if (comingSoon && !location.pathname.startsWith('/admin')) {
+  if (comingSoon && !location.pathname.startsWith('/admin') && !isAdminPreview) {
     return <Navigate to="/coming-soon" replace />
   }
   return children
@@ -143,6 +145,7 @@ function AppRoutes() {
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="notify-requests" element={<AdminNotifyRequests />} />
+          <Route path="preview" element={<AdminPreview />} />
         </Route>
 
         {/* Policy pages */}

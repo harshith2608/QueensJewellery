@@ -9,6 +9,7 @@ import {
   Settings,
   Bell,
   RotateCcw,
+  Smartphone,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { to: '/admin/reviews', label: 'Reviews', icon: Star },
   { to: '/admin/notify-requests', label: 'Notify Requests', icon: Bell },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
+  { to: '/admin/preview', label: 'Preview Site', icon: Smartphone, sidebarOnly: true },
 ]
 
 const BADGE_KEYS = {
@@ -48,7 +50,7 @@ export default function Sidebar({ variant = 'sidebar', counts = {}, onNavClick }
   if (variant === 'bottombar') {
     return (
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 flex justify-around items-center h-16 px-1 shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
+        {NAV_ITEMS.filter((item) => !item.sidebarOnly).map(({ to, label, icon: Icon }) => {
           const badgeCount = counts[BADGE_KEYS[to]] || 0
           return (
             <NavLink
