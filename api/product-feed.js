@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     const data = await response.json()
     const documents = data.documents || []
 
-    // Meta Catalog required columns
+    // Meta Catalog columns — order matches Meta's official template
     const header = [
       'id',
       'title',
@@ -59,14 +59,16 @@ export default async function handler(req, res) {
       'availability',
       'condition',
       'price',
-      'sale_price',
       'link',
       'image_link',
       'brand',
       'google_product_category',
+      'sale_price',
     ].join(',')
 
     const rows = [header]
+
+    const fmtPrice = (n) => `${Number(n).toFixed(2)} INR`
 
     for (const docu of documents) {
       const fields = docu.fields || {}
@@ -95,12 +97,12 @@ export default async function handler(req, res) {
         csv(description.slice(0, 5000)),
         csv(availability),
         csv('new'),
-        csv(`${price} INR`),
-        csv(salePrice ? `${salePrice} INR` : ''),
+        csv(fmtPrice(price)),
         csv(`${BASE_URL}/product/${id}`),
         csv(image),
         csv(BRAND),
         csv('Apparel & Accessories > Jewelry'),
+        csv(salePrice ? fmtPrice(salePrice) : ''),
       ].join(',')
 
       rows.push(row)
