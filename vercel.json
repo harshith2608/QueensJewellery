@@ -11,6 +11,7 @@
       ],
       "destination": "/api/product-meta?id=:id"
     },
+    { "source": "/api/product-feed.csv", "destination": "/api/product-feed" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
