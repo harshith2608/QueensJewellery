@@ -68,7 +68,7 @@ export default function Checkout() {
   // Recalculate shipping from live cart total — don't trust location.state alone
   // This handles cases where checkout is reached without going through cart (refresh, direct URL)
   const FREE_SHIPPING_THRESHOLD = 3500
-  const SHIPPING_FEE = 150
+  const SHIPPING_FEE = 100
   const discountedTotal = Math.max(0, cartTotal - discountAmount - globalOfferDiscount)
   const shippingFee = discountedTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
   const finalTotal = discountedTotal + shippingFee

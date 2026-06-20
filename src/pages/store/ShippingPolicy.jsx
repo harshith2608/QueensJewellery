@@ -11,8 +11,8 @@ export default function ShippingPolicy() {
 
       <Section title="Shipping Charges">
         <ul className="list-disc pl-5 space-y-1">
-          <li>Orders above ₹2,000 — <strong>Free Shipping</strong></li>
-          <li>Orders below ₹2,000 — Flat ₹150 shipping charge</li>
+          <li>Orders above ₹3,500 — <strong>Free Shipping</strong></li>
+          <li>Orders below ₹3,500 — Flat ₹100 shipping charge</li>
         </ul>
       </Section>
 
