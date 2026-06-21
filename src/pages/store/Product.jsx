@@ -242,6 +242,7 @@ export default function Product() {
   const handleWhatsApp = () => {
     if (!product) return
     const item = {
+      id: product.id,
       name: product.name,
       quantity,
       price: effectivePrice,

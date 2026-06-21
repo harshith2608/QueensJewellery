@@ -10,13 +10,16 @@ import { formatPrice } from './formatters'
 export const buildWhatsAppOrderMessage = (cartItems, total, coupon = null) => {
   const separator = '─'.repeat(28)
 
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+
   const itemLines = cartItems
     .map((item) => {
       const variantLabel = item.variant ? ` (${item.variant})` : ''
       const lineTotal = formatPrice(item.price * item.quantity)
-      return `• ${item.name}${variantLabel}\n  Qty: ${item.quantity}  |  ${formatPrice(item.price)} each  =  ${lineTotal}`
+      const linkLine = item.id ? `\n  ${baseUrl}/product/${item.id}` : ''
+      return `• ${item.name}${variantLabel}\n  Qty: ${item.quantity}  |  ${formatPrice(item.price)} each  =  ${lineTotal}${linkLine}`
     })
-    .join('\n')
+    .join('\n\n')
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
