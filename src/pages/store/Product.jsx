@@ -9,7 +9,6 @@ import {
   Star,
   ChevronDown,
   ChevronUp,
-  AlertTriangle,
   CheckCircle2,
   XCircle,
   Share2,
@@ -64,14 +63,6 @@ function StockStatus({ stock }) {
       <div className="flex items-center gap-1.5 text-red-500 text-sm font-medium">
         <XCircle className="w-4 h-4" />
         Out of Stock
-      </div>
-    )
-  }
-  if (stock <= 5) {
-    return (
-      <div className="flex items-center gap-1.5 text-amber-600 text-sm font-medium">
-        <AlertTriangle className="w-4 h-4" />
-        Only {stock} left
       </div>
     )
   }
