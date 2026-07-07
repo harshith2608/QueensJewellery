@@ -170,9 +170,9 @@ function ProductPagePreview({ product }) {
 }
 
 
-const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [], instagramUrl: '' }
+const EMPTY_FORM = { name: '', productCode: '', description: '', categoryId: '', groupName: '', price: '', salePrice: '', stock: '', tags: '', sizes: '', featured: false, active: true, media: [], instagramUrl: '' }
 
-function ProductForm({ initial, categories, onSave, onCancel }) {
+function ProductForm({ initial, categories, existingGroups = [], onSave, onCancel }) {
   const [form, setForm] = useState(initial
     ? { ...initial, tags: Array.isArray(initial.tags) ? initial.tags.join(', ') : (initial.tags || ''), sizes: Array.isArray(initial.sizes) ? initial.sizes.join(', ') : (initial.sizes || ''), salePrice: initial.salePrice ?? '' }
     : EMPTY_FORM)
@@ -206,6 +206,7 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
         stock: form.stock !== '' && form.stock !== null ? Number(form.stock) : null,
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
         sizes: form.sizes.split(',').map((s) => s.trim()).filter(Boolean),
+        groupName: form.groupName?.trim() || null,
         featured: form.featured, active: form.active, media, instagramUrl: form.instagramUrl?.trim() || null,
       })
     } finally { setSaving(false) }
@@ -269,6 +270,17 @@ function ProductForm({ initial, categories, onSave, onCancel }) {
             </label>
             <input value={form.instagramUrl || ''} onChange={(e) => set('instagramUrl', e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder="https://www.instagram.com/reel/..." />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-jewel-dark mb-1">
+              Group Name <span className="text-jewel-muted font-normal">optional — products sharing this show as "Similar Products"</span>
+            </label>
+            <input value={form.groupName || ''} onChange={(e) => set('groupName', e.target.value)}
+              list="group-name-suggestions"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" placeholder='e.g. "AD Choker — Stone Colors" or "Ruby Bridal Set"' />
+            <datalist id="group-name-suggestions">
+              {existingGroups.map((g) => <option key={g} value={g} />)}
+            </datalist>
           </div>
           {isBangleCategory() && (
             <div className="sm:col-span-2">
@@ -513,7 +525,13 @@ export default function Products() {
 
       {modal && (
         <Modal title={modal === 'add' ? 'Add Product' : 'Edit Product'} onClose={() => setModal(null)} wide>
-          <ProductForm initial={modal?.edit || null} categories={categories} onSave={handleSave} onCancel={() => setModal(null)} />
+          <ProductForm
+            initial={modal?.edit || null}
+            categories={categories}
+            existingGroups={[...new Set(products.map((p) => p.groupName).filter(Boolean))].sort()}
+            onSave={handleSave}
+            onCancel={() => setModal(null)}
+          />
         </Modal>
       )}
 

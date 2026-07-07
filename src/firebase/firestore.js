@@ -79,6 +79,20 @@ export const getProducts = async ({ categoryId, featured, limit } = {}) => {
   return results
 }
 
+/**
+ * Get active products in the same group, excluding the current product.
+ * Used by the product page "Similar Products" section.
+ */
+export const getProductsByGroup = async (groupName, excludeId) => {
+  if (!groupName) return []
+  const q = query(productsRef, where('groupName', '==', groupName))
+  const snap = await getDocs(q)
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((p) => p.active !== false && p.id !== excludeId)
+    .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+}
+
 /** Get ALL products including inactive ones — admin use only. */
 export const getAllProducts = async () => {
   const snap = await getDocs(productsRef)

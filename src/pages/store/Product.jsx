@@ -27,7 +27,7 @@ import Button from '../../components/ui/Button.jsx'
 
 import { useCart } from '../../contexts/CartContext.jsx'
 import { useCategories } from '../../hooks/useCategories.js'
-import { getProductById, getProducts } from '../../firebase/firestore.js'
+import { getProductById, getProducts, getProductsByGroup } from '../../firebase/firestore.js'
 import { formatPrice } from '../../utils/formatters.js'
 import { openWhatsApp, buildWhatsAppOrderMessage } from '../../utils/whatsapp.js'
 
@@ -133,6 +133,37 @@ function RelatedProducts({ categoryId, excludeId }) {
     <section className="mt-16">
       <h2 className="font-serif text-2xl sm:text-3xl text-jewel-dark mb-6">
         You May Also Like
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─── Similar Products (same group) ────────────────────────────────────────────
+function SimilarProducts({ groupName, excludeId }) {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!groupName) { setLoading(false); return }
+    let cancelled = false
+    getProductsByGroup(groupName, excludeId)
+      .then((data) => { if (!cancelled) setProducts(data.slice(0, 8)) })
+      .catch(console.error)
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [groupName, excludeId])
+
+  if (loading || !products.length) return null
+
+  return (
+    <section className="mt-16">
+      <h2 className="font-serif text-2xl sm:text-3xl text-jewel-dark mb-6">
+        Similar Products
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {products.map((product) => (
@@ -502,6 +533,7 @@ export default function Product() {
           </div>
 
           {/* Related Products */}
+          <SimilarProducts groupName={product.groupName} excludeId={id} />
           <RelatedProducts categoryId={product.categoryId} excludeId={id} />
         </div>
       </main>
