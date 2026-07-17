@@ -16,22 +16,6 @@ import { useCategories } from '../../hooks/useCategories.js'
 import { useProducts } from '../../hooks/useProducts.js'
 import { getFeaturedProducts, getSettings } from '../../firebase/firestore.js'
 
-// ─── Announcement Bar ─────────────────────────────────────────────────────────
-function AnnouncementBar({ text }) {
-  if (!text) return null
-  return (
-    <div className="bg-rose-gold text-white text-xs py-2 overflow-hidden">
-      <div className="whitespace-nowrap animate-marquee inline-block px-8">
-        {text}
-        <span className="mx-12">✦</span>
-        {text}
-        <span className="mx-12">✦</span>
-        {text}
-      </div>
-    </div>
-  )
-}
-
 // ─── Hero Banner ──────────────────────────────────────────────────────────────
 function HeroBanner({ banners }) {
   if (!banners || banners.length === 0) {
@@ -236,14 +220,10 @@ export default function Home() {
     return () => { cancelled = true }
   }, [])
 
-  const announcementText = settings?.announcement || ''
   const heroBanners = (settings?.banners || []).map((b) => ({ ...b, image: b.url }))
 
   return (
     <div className="min-h-screen flex flex-col bg-ivory">
-      {/* Announcement bar at very top */}
-      {!settingsLoading && <AnnouncementBar text={announcementText} />}
-
       <Navbar />
 
       <main className="flex-1 pb-20 md:pb-0">
