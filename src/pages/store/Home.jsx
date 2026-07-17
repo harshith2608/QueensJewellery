@@ -236,7 +236,7 @@ export default function Home() {
     return () => { cancelled = true }
   }, [])
 
-  const announcementText = settings?.announcementBar || ''
+  const announcementText = settings?.announcement || ''
   const heroBanners = (settings?.banners || []).map((b) => ({ ...b, image: b.url }))
 
   return (

@@ -26,7 +26,17 @@ export default function Cart() {
     if (fetchedOffer.current) return
     fetchedOffer.current = true
     getSettings()
-      .then((s) => { if (s.globalOffer?.active && s.globalOffer?.value > 0) setGlobalOffer(s.globalOffer) })
+      .then((s) => {
+        const offer = s.globalOffer
+        if (!offer?.active || !(offer?.value > 0)) return
+        // Skip expired offers — endDate is inclusive (offer valid through end of that day)
+        if (offer.endDate) {
+          const end = new Date(offer.endDate)
+          end.setHours(23, 59, 59, 999)
+          if (Date.now() > end.getTime()) return
+        }
+        setGlobalOffer(offer)
+      })
       .catch(() => {})
   }, [])
 

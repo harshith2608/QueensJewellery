@@ -5,7 +5,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import MediaUpload from '../../components/admin/MediaUpload'
 import toast from 'react-hot-toast'
 
-const EMPTY_OFFER = { active: false, type: 'percent', value: '', minOrder: '' }
+const EMPTY_OFFER = { active: false, type: 'percent', value: '', minOrder: '', endDate: '' }
 const EMPTY_PROMO = { active: true, label: 'Special Offer', title: '', subtitle: '', buttonText: 'Shop Now', buttonLink: '/shop' }
 
 export default function Settings() {
@@ -59,6 +59,7 @@ export default function Settings() {
           type: globalOffer.type,
           value: globalOffer.value !== '' ? Number(globalOffer.value) : 0,
           minOrder: globalOffer.minOrder !== '' ? Number(globalOffer.minOrder) : 0,
+          endDate: globalOffer.endDate || null,
         },
       })
       toast.success('Settings saved')
@@ -234,10 +235,31 @@ export default function Settings() {
           </div>
         </div>
 
+        <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+          <div>
+            <label className="block text-xs font-medium text-jewel-muted mb-1">
+              Offer ends on <span className="font-normal">(optional — leave blank for no expiry)</span>
+            </label>
+            <input type="date" value={globalOffer.endDate || ''}
+              onChange={(e) => setOffer('endDate', e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" />
+          </div>
+          <button type="button"
+            onClick={() => {
+              const d = new Date()
+              d.setDate(d.getDate() + 15)
+              setOffer('endDate', d.toISOString().slice(0, 10))
+            }}
+            className="px-3 py-2.5 rounded-xl text-xs font-medium border border-rose-gold text-rose-gold hover:bg-blush transition-colors whitespace-nowrap">
+            Set +15 days
+          </button>
+        </div>
+
         {globalOffer.active && globalOffer.value > 0 && (
           <p className="text-xs text-rose-gold font-medium">
             ✓ {globalOffer.type === 'percent' ? `${globalOffer.value}% off` : `₹${globalOffer.value} off`}
             {globalOffer.minOrder > 0 ? ` on orders above ₹${globalOffer.minOrder}` : ' on all orders'}
+            {globalOffer.endDate ? ` — valid until ${new Date(globalOffer.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
           </p>
         )}
       </div>
