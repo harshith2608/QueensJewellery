@@ -64,6 +64,9 @@ export default function Checkout() {
   const discountAmount = locationState.discountAmount ?? 0
   const globalOffer = locationState.globalOffer ?? null
   const globalOfferDiscount = locationState.globalOfferDiscount ?? 0
+  const freeGift = locationState.freeGift ?? null
+  // Re-evaluate gift eligibility against live cart total (in case user tweaks quantities)
+  const freeGiftActive = freeGift && (!freeGift.minOrder || cartTotal >= freeGift.minOrder)
 
   // Recalculate shipping from live cart total — don't trust location.state alone
   // This handles cases where checkout is reached without going through cart (refresh, direct URL)
@@ -175,6 +178,9 @@ export default function Checkout() {
         : null,
       globalOffer: globalOffer
         ? { type: globalOffer.type, value: globalOffer.value, discount: globalOfferDiscount }
+        : null,
+      freeGift: freeGiftActive
+        ? { name: freeGift.name, value: freeGift.value || 0 }
         : null,
     }
 
@@ -705,6 +711,12 @@ export default function Checkout() {
                     <div className="flex justify-between text-green-600">
                       <span>Coupon ({appliedCoupon.code})</span>
                       <span>−{formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
+                  {freeGiftActive && (
+                    <div className="flex justify-between text-green-600">
+                      <span>🎁 {freeGift.name}{freeGift.value > 0 ? ` (worth ₹${freeGift.value})` : ''}</span>
+                      <span className="font-medium">FREE</span>
                     </div>
                   )}
                   <div className="flex justify-between text-jewel-muted">

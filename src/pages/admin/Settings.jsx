@@ -7,12 +7,14 @@ import toast from 'react-hot-toast'
 
 const EMPTY_OFFER = { active: false, type: 'percent', value: '', minOrder: '', endDate: '' }
 const EMPTY_PROMO = { active: true, label: 'Special Offer', title: '', subtitle: '', buttonText: 'Shop Now', buttonLink: '/shop' }
+const EMPTY_FREE_GIFT = { active: false, name: '', value: '', minOrder: '' }
 
 export default function Settings() {
   const [whatsapp, setWhatsapp] = useState('')
   const [announcement, setAnnouncement] = useState('')
   const [banners, setBanners] = useState([])
   const [globalOffer, setGlobalOffer] = useState(EMPTY_OFFER)
+  const [freeGift, setFreeGift] = useState(EMPTY_FREE_GIFT)
   const [promoBanner, setPromoBanner] = useState(EMPTY_PROMO)
   const [comingSoon, setComingSoon] = useState(false)
   const [comingSoonSaving, setComingSoonSaving] = useState(false)
@@ -27,6 +29,7 @@ export default function Settings() {
         setAnnouncement(data.announcement || '')
         setBanners(data.banners || [])
         setGlobalOffer(data.globalOffer || EMPTY_OFFER)
+        setFreeGift(data.freeGift || EMPTY_FREE_GIFT)
         setPromoBanner(data.promoBanner || EMPTY_PROMO)
         setComingSoon(data.comingSoon || false)
       } catch { toast.error('Failed to load settings') }
@@ -46,6 +49,7 @@ export default function Settings() {
   }
 
   const setOffer = (field, value) => setGlobalOffer((p) => ({ ...p, [field]: value }))
+  const setGift = (field, value) => setFreeGift((p) => ({ ...p, [field]: value }))
   const setPromo = (field, value) => setPromoBanner((p) => ({ ...p, [field]: value }))
 
   const handleSave = async () => {
@@ -60,6 +64,12 @@ export default function Settings() {
           value: globalOffer.value !== '' ? Number(globalOffer.value) : 0,
           minOrder: globalOffer.minOrder !== '' ? Number(globalOffer.minOrder) : 0,
           endDate: globalOffer.endDate || null,
+        },
+        freeGift: {
+          active: freeGift.active,
+          name: freeGift.name?.trim() || '',
+          value: freeGift.value !== '' ? Number(freeGift.value) : 0,
+          minOrder: freeGift.minOrder !== '' ? Number(freeGift.minOrder) : 0,
         },
       })
       toast.success('Settings saved')
@@ -260,6 +270,49 @@ export default function Settings() {
             ✓ {globalOffer.type === 'percent' ? `${globalOffer.value}% off` : `₹${globalOffer.value} off`}
             {globalOffer.minOrder > 0 ? ` on orders above ₹${globalOffer.minOrder}` : ' on all orders'}
             {globalOffer.endDate ? ` — valid until ${new Date(globalOffer.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+          </p>
+        )}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-jewel-dark">Free Gift with Order</h2>
+            <p className="text-xs text-jewel-muted mt-0.5">Shown in the cart & checkout when the subtotal qualifies. You add it manually when packing.</p>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={freeGift.active} onChange={(e) => setGift('active', e.target.checked)} className="w-4 h-4 accent-rose-gold" />
+            <span className="text-sm font-medium text-jewel-dark">Active</span>
+          </label>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-jewel-muted mb-1">Gift Name</label>
+            <input value={freeGift.name} onChange={(e) => setGift('name', e.target.value)}
+              placeholder="e.g. Surprise Jewellery Gift"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-jewel-muted mb-1">Worth (₹)</label>
+            <input type="number" min="0" value={freeGift.value}
+              onChange={(e) => setGift('value', e.target.value)}
+              placeholder="e.g. 150"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" />
+          </div>
+          <div className="sm:col-span-3">
+            <label className="block text-xs font-medium text-jewel-muted mb-1">Min Order (₹)</label>
+            <input type="number" min="0" value={freeGift.minOrder}
+              onChange={(e) => setGift('minOrder', e.target.value)}
+              placeholder="e.g. 1000"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold" />
+          </div>
+        </div>
+
+        {freeGift.active && freeGift.name && (
+          <p className="text-xs text-rose-gold font-medium">
+            🎁 {freeGift.name}{freeGift.value > 0 ? ` (worth ₹${freeGift.value})` : ''}
+            {freeGift.minOrder > 0 ? ` — free on orders above ₹${freeGift.minOrder}` : ' — free with every order'}
           </p>
         )}
       </div>

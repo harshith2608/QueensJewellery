@@ -20,6 +20,7 @@ export default function Cart() {
   const navigate = useNavigate()
 
   const [globalOffer, setGlobalOffer] = useState(null)
+  const [freeGift, setFreeGift] = useState(null)
   const fetchedOffer = useRef(false)
 
   useEffect(() => {
@@ -28,14 +29,19 @@ export default function Cart() {
     getSettings()
       .then((s) => {
         const offer = s.globalOffer
-        if (!offer?.active || !(offer?.value > 0)) return
-        // Skip expired offers — endDate is inclusive (offer valid through end of that day)
-        if (offer.endDate) {
-          const end = new Date(offer.endDate)
-          end.setHours(23, 59, 59, 999)
-          if (Date.now() > end.getTime()) return
+        if (offer?.active && offer?.value > 0) {
+          // Skip expired offers — endDate is inclusive (valid through end of that day)
+          let expired = false
+          if (offer.endDate) {
+            const end = new Date(offer.endDate)
+            end.setHours(23, 59, 59, 999)
+            expired = Date.now() > end.getTime()
+          }
+          if (!expired) setGlobalOffer(offer)
         }
-        setGlobalOffer(offer)
+        if (s.freeGift?.active && s.freeGift?.name) {
+          setFreeGift(s.freeGift)
+        }
       })
       .catch(() => {})
   }, [])
@@ -59,6 +65,7 @@ export default function Cart() {
   // ─── Global offer (auto-applied) ───────────────────────────────────────────
 
   const globalOfferActive = globalOffer && (!globalOffer.minOrder || cartTotal >= globalOffer.minOrder)
+  const freeGiftActive = freeGift && (!freeGift.minOrder || cartTotal >= freeGift.minOrder)
   const globalOfferDiscount = globalOfferActive
     ? globalOffer.type === 'percent'
       ? Math.round((cartTotal * globalOffer.value) / 100)
@@ -130,7 +137,7 @@ export default function Cart() {
   // ─── Navigation ────────────────────────────────────────────────────────────
 
   const handleProceedToCheckout = () => {
-    navigate('/checkout', { state: { appliedCoupon, discountAmount, globalOffer: globalOfferActive ? globalOffer : null, globalOfferDiscount, shippingFee, finalTotal } })
+    navigate('/checkout', { state: { appliedCoupon, discountAmount, globalOffer: globalOfferActive ? globalOffer : null, globalOfferDiscount, freeGift: freeGiftActive ? freeGift : null, shippingFee, finalTotal } })
   }
 
   const handleWhatsAppOrder = () => {
@@ -317,6 +324,16 @@ export default function Cart() {
                       {appliedCoupon.code}
                     </span>
                     <span>−{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+
+                {/* Free gift */}
+                {freeGiftActive && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">
+                      🎁 {freeGift.name}{freeGift.value > 0 ? ` (worth ₹${freeGift.value})` : ''}
+                    </span>
+                    <span className="font-medium">FREE</span>
                   </div>
                 )}
 
